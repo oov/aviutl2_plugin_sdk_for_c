@@ -31,6 +31,8 @@ struct aviutl2_input_plugin_table;
 struct aviutl2_output_plugin_table;
 struct aviutl2_filter_plugin_table;
 struct aviutl2_script_module_table;
+struct aviutl2_edit_handle;
+struct aviutl2_project_file;
 
 /**
  * Object handle
@@ -45,6 +47,16 @@ struct aviutl2_object_layer_frame {
   int layer; /**< Layer number */
   int start; /**< Start frame number */
   int end;   /**< End frame number */
+};
+
+/**
+ * Media information
+ */
+struct aviutl2_media_info {
+  int video_track_num; /**< Video track count (0 if no video) */
+  int audio_track_num; /**< Audio track count (0 if no audio) */
+  double total_time;   /**< Total time (0 for still images) */
+  int width, height;   /**< Resolution */
 };
 
 //--------------------------------
@@ -78,7 +90,8 @@ struct aviutl2_edit_section {
    * @param alias Pointer to object alias data (UTF-8). Same format as object alias file
    * @param layer Layer number to create
    * @param frame Frame number to create
-   * @param length Frame length of object. Used when frame length is not specified in alias data
+   * @param length Frame count of object. If frame information exists in alias data, length is set from that frame information.
+   *               If 0 is specified for frame count, length and add position are auto-adjusted
    * @return Handle of created object (returns NULL on failure). Fails if overlapping with existing object or if alias
    * data is invalid
    */
@@ -168,10 +181,11 @@ struct aviutl2_edit_section {
   void (*set_focus_object)(aviutl2_object_handle object);
 
   /**
-   * Deprecated logging helper kept for compatibility
-   * @param message Message to output (UTF-16)
+   * Get pointer to project file
+   * @param edit Edit handle
+   * @return Pointer to project file structure. Valid until callback processing ends
    */
-  void (*deprecated_output_log)(wchar_t const *message);
+  struct aviutl2_project_file *(*get_project_file)(struct aviutl2_edit_handle *edit);
 
   /**
    * Get handle of selected object in layer editor by index
@@ -185,6 +199,65 @@ struct aviutl2_edit_section {
    * @return Number of selected objects
    */
   int (*get_selected_object_num)(void);
+
+  /**
+   * Get layer and frame position from mouse coordinates
+   * Calculates from coordinates of the last mouse move window message
+   * @param layer Pointer to store layer number
+   * @param frame Pointer to store frame number
+   * @return true if mouse coordinates are on layer editor
+   */
+  bool (*get_mouse_layer_frame)(int *layer, int *frame);
+
+  /**
+   * Get layer and frame position from specified screen coordinates
+   * @param x Screen X coordinate
+   * @param y Screen Y coordinate
+   * @param layer Pointer to store layer number
+   * @param frame Pointer to store frame number
+   * @return true if screen coordinates are on layer editor
+   */
+  bool (*pos_to_layer_frame)(int x, int y, int *layer, int *frame);
+
+  /**
+   * Check if specified media file is supported
+   * @param file Media file path
+   * @param strict If true, check if file can actually be loaded. If false, check if extension is supported
+   * @return true if supported
+   */
+  bool (*is_support_media_file)(wchar_t const *file, bool strict);
+
+  /**
+   * Get information of specified media file
+   * Cannot get info for files other than video, audio, and image files
+   * @param file Media file path
+   * @param info Pointer to media info storage
+   * @param info_size Size of media info storage (only size bytes are retrieved if different from MEDIA_INFO)
+   * @return true if info was obtained
+   */
+  bool (*get_media_info)(wchar_t const *file, struct aviutl2_media_info *info, int info_size);
+
+  /**
+   * Create object from media file at specified position
+   * @param file Media file path
+   * @param layer Layer number to create
+   * @param frame Frame number to create
+   * @param length Frame count of object. If 0 is specified, length and position are auto-adjusted
+   * @return Handle of created object (returns NULL on failure)
+   *         Fails if overlapping with existing object or if media file is not supported
+   */
+  aviutl2_object_handle (*create_object_from_media_file)(wchar_t const *file, int layer, int frame, int length);
+
+  /**
+   * Create object at specified position
+   * @param effect Effect name (effect.name value in alias file)
+   * @param layer Layer number to create
+   * @param frame Frame number to create
+   * @param length Frame count of object. If 0 is specified, length and position are auto-adjusted
+   * @return Handle of created object (returns NULL on failure)
+   *         Fails if overlapping with existing object or if specified effect is not supported
+   */
+  aviutl2_object_handle (*create_object)(wchar_t const *effect, int layer, int frame, int length);
 };
 
 /**
@@ -208,20 +281,30 @@ struct aviutl2_edit_handle {
    * @return true on success. Fails if edit is not available (during output)
    */
   bool (*call_edit_section_param)(void *param, void (*func_proc_edit)(void *param, struct aviutl2_edit_section *edit));
+
+  /**
+   * Get edit information
+   * Cannot be used if edit processing is already in progress (inside callback function with EDIT_SECTION argument etc.)
+   * Deadlocks if called in such situation
+   * @param info Pointer to edit info storage
+   * @param info_size Size of edit info storage (only size bytes are retrieved if different from EDIT_INFO)
+   */
+  void (*get_edit_info)(struct aviutl2_edit_info *info, int info_size);
 };
 
 //--------------------------------
 
 /**
  * Project file
- * Used in callbacks for loading and saving project files
+ * Used in callbacks for loading and saving project files, and in edit callback functions
  * Project save data is part of plugin data
  */
 struct aviutl2_project_file {
   /**
    * Get string (UTF-8) saved in project
    * @param key Key name (UTF-8)
-   * @return Pointer to obtained string (NULL if not set)
+   * @return Pointer to obtained string (NULL if not set).
+   *         Valid until callback processing ends
    */
   char const *(*get_param_string)(char const *key);
 
@@ -253,6 +336,13 @@ struct aviutl2_project_file {
    * Delete all data saved in project
    */
   void (*clear_params)(void);
+
+  /**
+   * Get project file path
+   * @return Pointer to project file path (may not be set)
+   *         Valid until callback processing ends
+   */
+  wchar_t const *(*get_project_file_path)(void);
 };
 
 //--------------------------------

@@ -205,6 +205,28 @@ struct aviutl2_filter_item_data {
   int size;
 };
 
+/**
+ * Settings group filter item
+ * Groups subsequent setting items
+ * Set name to empty to define the end of a group
+ */
+struct aviutl2_filter_item_group {
+  /**
+   * Setting type (L"group")
+   */
+  wchar_t const *type;
+
+  /**
+   * Setting name
+   */
+  wchar_t const *name;
+
+  /**
+   * Default visibility state
+   */
+  bool const default_visible;
+};
+
 //--------------------------------
 
 /**
