@@ -1,1 +1,1 @@
-copilot --allow-all-tools --model claude-opus-4.5 -p "$(cat CLAUDE.md)"
+copilot --allow-all-tools --model claude-opus-4.5 -p "$(cat UPDATE-PROMPT.md)"
