@@ -93,7 +93,7 @@ struct aviutl2_edit_section {
    * @param length Frame count of object. If frame information exists in alias data, length is set from that frame information.
    *               If 0 is specified for frame count, length and add position are auto-adjusted
    * @return Handle of created object (returns NULL on failure). Fails if overlapping with existing object or if alias
-   * data is invalid
+   * data is invalid. For multi-object alias data, returns the first object
    */
   aviutl2_object_handle (*create_object_from_alias)(char const *alias, int layer, int frame, int length);
 
@@ -258,6 +258,13 @@ struct aviutl2_edit_section {
    *         Fails if overlapping with existing object or if specified effect is not supported
    */
   aviutl2_object_handle (*create_object)(wchar_t const *effect, int layer, int frame, int length);
+
+  /**
+   * Set current layer/frame position. Adjusted to available range
+   * @param layer Layer number
+   * @param frame Frame number
+   */
+  void (*set_cursor_layer_frame)(int layer, int frame);
 };
 
 /**
@@ -434,4 +441,11 @@ struct aviutl2_host_app_table {
    * @param func_proc_object_menu Callback invoked on menu selection
    */
   void (*register_object_menu)(wchar_t const *name, void (*func_proc_object_menu)(struct aviutl2_edit_section *edit));
+
+  /**
+   * Register config menu
+   * @param name Config menu name
+   * @param func_config Callback function for config menu selection
+   */
+  void (*register_config_menu)(wchar_t const *name, void (*func_config)(HWND hwnd, HINSTANCE dll_hinst));
 };
