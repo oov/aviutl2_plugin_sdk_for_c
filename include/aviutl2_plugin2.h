@@ -66,13 +66,22 @@ struct aviutl2_media_info {
  * In edit info, frame numbers and layer numbers start from 0 (different from UI display)
  */
 struct aviutl2_edit_info {
-  int width, height; /**< Scene resolution */
-  int rate, scale;   /**< Scene frame rate */
-  int sample_rate;   /**< Scene sampling rate */
-  int frame;         /**< Current cursor frame number */
-  int layer;         /**< Current selected layer number */
-  int frame_max;     /**< Maximum frame number where objects exist */
-  int layer_max;     /**< Maximum layer number where objects exist */
+  int width, height;        /**< Scene resolution */
+  int rate, scale;          /**< Scene frame rate */
+  int sample_rate;          /**< Scene sampling rate */
+  int frame;                /**< Current cursor frame number */
+  int layer;                /**< Current selected layer number */
+  int frame_max;            /**< Maximum frame number where objects exist */
+  int layer_max;            /**< Maximum layer number where objects exist */
+  int display_frame_start;  /**< Start frame number displayed in layer editor */
+  int display_layer_start;  /**< Start layer number displayed in layer editor */
+  int display_frame_num;    /**< Number of frames displayed in layer editor (not exact) */
+  int display_layer_num;    /**< Number of layers displayed in layer editor (not exact) */
+  int select_range_start;   /**< Start frame number of frame range selection (-1 if not selected) */
+  int select_range_end;     /**< End frame number of frame range selection (-1 if not selected) */
+  float grid_bpm_tempo;     /**< Grid(BPM) tempo */
+  int grid_bpm_beat;        /**< Grid(BPM) beat */
+  float grid_bpm_offset;    /**< Grid(BPM) base time */
 };
 
 /**
@@ -265,6 +274,43 @@ struct aviutl2_edit_section {
    * @param frame Frame number
    */
   void (*set_cursor_layer_frame)(int layer, int frame);
+
+  /**
+   * Set display start position of layer/frame in layer editor. Adjusted to available range
+   * @param layer Display start layer number
+   * @param frame Display start frame number
+   */
+  void (*set_display_layer_frame)(int layer, int frame);
+
+  /**
+   * Set frame range selection. Adjusted to available range
+   * @param start Start frame number
+   * @param end End frame number. Specifying -1 for both start and end clears the selection
+   */
+  void (*set_select_range)(int start, int end);
+
+  /**
+   * Set grid(BPM)
+   * @param tempo Tempo
+   * @param beat Beat
+   * @param offset Base time
+   */
+  void (*set_grid_bpm)(float tempo, int beat, float offset);
+
+  /**
+   * Get object name
+   * @param object Object handle
+   * @return Pointer to object name (returns NULL if using standard name).
+   *         Valid until object is edited or callback processing ends
+   */
+  wchar_t const *(*get_object_name)(aviutl2_object_handle object);
+
+  /**
+   * Set object name
+   * @param object Object handle
+   * @param name Object name (specifying NULL or empty string sets to standard name)
+   */
+  void (*set_object_name)(aviutl2_object_handle object, wchar_t const *name);
 };
 
 /**
