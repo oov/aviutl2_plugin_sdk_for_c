@@ -411,9 +411,15 @@ struct aviutl2_filter_plugin_table {
     aviutl2_filter_plugin_table_flag_audio = 2,
 
     /**
-     * Support input of object processing (when media is an input object)
+     * Support media object input (when making a media object)
      */
     aviutl2_filter_plugin_table_flag_input = 4,
+
+    /**
+     * Support filter object (when supporting filter objects)
+     * For filter objects, image size cannot be changed
+     */
+    aviutl2_filter_plugin_table_flag_filter = 8,
   };
 
   /**

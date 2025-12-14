@@ -96,13 +96,13 @@ struct aviutl2_edit_section {
 
   /**
    * Create object alias at specified position
-   * @param alias Pointer to object alias data (UTF-8). Same format as object alias file
+   * @param alias Pointer to object alias data (UTF-8). Same format as object alias file (.object)
    * @param layer Layer number to create
    * @param frame Frame number to create
    * @param length Frame count of object. If frame information exists in alias data, length is set from that frame information.
-   *               If 0 is specified for frame count, length and add position are auto-adjusted
+   *               If 0 is specified for frame count, length or add position are auto-adjusted
    * @return Handle of created object (returns NULL on failure). Fails if overlapping with existing object or if alias
-   * data is invalid. For multi-object alias data, returns the first object
+   * data is invalid. For multi-object alias data, returns handle of the first object. All objects are created.
    */
   aviutl2_object_handle (*create_object_from_alias)(char const *alias, int layer, int frame, int length);
 
@@ -251,7 +251,7 @@ struct aviutl2_edit_section {
    * @param file Media file path
    * @param layer Layer number to create
    * @param frame Frame number to create
-   * @param length Frame count of object. If 0 is specified, length and position are auto-adjusted
+   * @param length Frame count of object. If 0 is specified, length or position are auto-adjusted
    * @return Handle of created object (returns NULL on failure)
    *         Fails if overlapping with existing object or if media file is not supported
    */
@@ -262,7 +262,7 @@ struct aviutl2_edit_section {
    * @param effect Effect name (effect.name value in alias file)
    * @param layer Layer number to create
    * @param frame Frame number to create
-   * @param length Frame count of object. If 0 is specified, length and position are auto-adjusted
+   * @param length Frame count of object. If 0 is specified, length or position are auto-adjusted
    * @return Handle of created object (returns NULL on failure)
    *         Fails if overlapping with existing object or if specified effect is not supported
    */
