@@ -490,8 +490,22 @@ struct aviutl2_host_app_table {
 
   /**
    * Register config menu
+   * After registering config menu, registering window client will add "Settings" to system menu
    * @param name Config menu name
    * @param func_config Callback function for config menu selection
    */
   void (*register_config_menu)(wchar_t const *name, void (*func_config)(HWND hwnd, HINSTANCE dll_hinst));
+
+  /**
+   * Register edit menu
+   * @param name Edit menu name. Use '\' in name to create hierarchical display
+   * @param func_proc_edit_menu Callback function for edit menu selection
+   */
+  void (*register_edit_menu)(wchar_t const *name, void (*func_proc_edit_menu)(struct aviutl2_edit_section *edit));
+
+  /**
+   * Register function to be called when cache clear operation is performed
+   * @param func_proc_clear_cache Callback function for cache clear
+   */
+  void (*register_clear_cache_handler)(void (*func_proc_clear_cache)(struct aviutl2_edit_section *edit));
 };
