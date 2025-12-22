@@ -16,7 +16,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
+          fetch-depth: 1
           token: ${{ secrets.COPILOT_SECRET }}
 
       - name: Run update script
