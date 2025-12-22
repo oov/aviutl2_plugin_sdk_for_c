@@ -19,9 +19,6 @@ jobs:
           submodules: true
           token: ${{ secrets.COPILOT_SECRET }}
 
-      - name: Install GitHub Copilot CLI
-        run: npm install -g @github/copilot
-
       - name: Run update script
         env:
           GH_TOKEN: ${{ secrets.COPILOT_SECRET }}

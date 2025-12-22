@@ -22,6 +22,5 @@ echo ""
 echo "Launching AI to process updates..."
 
 pushd "$SCRIPT_DIR" > /dev/null
-# I don't want to allow everything, but even if I allow individually, it gets denied and I don't know the cause well.
-copilot --allow-all-paths --allow-all-tools --model claude-opus-4.5 -p "$(cat UPDATE-PROMPT.md)"
+npx -y @github/copilot --allow-all-paths --allow-all-tools --model claude-opus-4.5 -p "$(cat UPDATE-PROMPT.md)"
 popd > /dev/null
