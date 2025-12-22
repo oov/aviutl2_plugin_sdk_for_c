@@ -26,3 +26,6 @@ include/*.h にあるソースコードは aviutl2_plugin_sdk にあるサブモ
 6. 全てのヘッダーファイルを変換し終わったら `git --no-pager diff > .working/diff-c.txt` で変更点を書き出し、`.working/diff-shift_jis.txt` や `.working/diff-utf8.txt` と突き合わせて漏れがないか確認する
 7. `git add . && git commit -m "sync to $(cat aviutl2_plugin_sdk/.tools/sdk_last_update.txt)"` でコミットする
 8. `git push origin main` でリモートにプッシュする
+
+なお、サブモジュールが更新されていてもヘッダーファイル類に更新がない場合も当然あります。
+その場合でもサブモジュールの更新は取り込み `git commit -m "update submodule to <commit id>"` のようにコミットして `git push origin main` してください。

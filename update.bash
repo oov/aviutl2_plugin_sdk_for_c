@@ -17,10 +17,28 @@ fi
 echo "Updates detected: $CURRENT_SHA -> $REMOTE_SHA"
 
 # 2. Fetch submodule only when needed
-echo "Fetching submodule with depth 1..."
+echo "Fetching submodule..."
 git submodule update --init --recursive --depth=1
 
-echo "Launching AI to process updates..."
+pushd "$SUBMODULE_PATH" > /dev/null
+git fetch origin main --depth=1
+# Check for header changes in submodule
+CHANGED_HEADERS=$(git diff --name-only "$CURRENT_SHA" "$REMOTE_SHA" | grep '\.h$' || true)
+popd > /dev/null
+
+if [ -z "$CHANGED_HEADERS" ]; then
+    echo "No header changes detected. Updating submodule and committing..."
+    pushd "$SUBMODULE_PATH" > /dev/null
+    git checkout "$REMOTE_SHA"
+    popd > /dev/null
+    git add "$SUBMODULE_PATH"
+    git commit -m "Update submodule $SUBMODULE_PATH to $REMOTE_SHA (no header changes)"
+    git push origin main
+    echo "Done."
+    exit 0
+fi
+
+echo "Header changes detected. Launching AI to process updates..."
 
 pushd "$SCRIPT_DIR" > /dev/null
 npx -y @github/copilot --allow-all-paths --allow-all-tools --model claude-opus-4.5 -p "$(cat UPDATE-PROMPT.md)"
