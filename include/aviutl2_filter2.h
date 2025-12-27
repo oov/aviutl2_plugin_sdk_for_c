@@ -23,6 +23,7 @@
 #include <stdint.h>
 
 struct ID3D11Texture2D;
+struct aviutl2_edit_section;
 
 /**
  * Track bar filter item
@@ -227,6 +228,28 @@ struct aviutl2_filter_item_group {
   bool const default_visible;
 };
 
+/**
+ * Button filter item
+ * Callback function is called when button is pressed
+ * Note: Uses the same callback signature as edit callbacks in plugin2.h
+ */
+struct aviutl2_filter_item_button {
+  /**
+   * Setting type (L"button")
+   */
+  wchar_t const *type;
+
+  /**
+   * Setting name
+   */
+  wchar_t const *name;
+
+  /**
+   * Callback function
+   */
+  void (*callback)(struct aviutl2_edit_section *edit);
+};
+
 //--------------------------------
 
 /**
@@ -317,7 +340,28 @@ struct aviutl2_object_info {
    * Effect identifier inside the object (unique during application lifetime)
    */
   int64_t effect_id;
+
+  /**
+   * Flags
+   */
+  int flag;
 };
+
+enum {
+  /**
+   * Is filter object
+   */
+  aviutl2_object_info_flag_filter_object = 1,
+};
+
+/**
+ * Check if object is a filter object
+ * @param info Object information
+ * @return true if filter object
+ */
+static inline bool aviutl2_object_info_is_filter_object(struct aviutl2_object_info const *info) {
+  return info->flag & aviutl2_object_info_flag_filter_object;
+}
 
 //--------------------------------
 

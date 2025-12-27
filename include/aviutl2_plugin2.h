@@ -82,6 +82,7 @@ struct aviutl2_edit_info {
   float grid_bpm_tempo;     /**< Grid(BPM) tempo */
   int grid_bpm_beat;        /**< Grid(BPM) beat */
   float grid_bpm_offset;    /**< Grid(BPM) base time */
+  int scene_id;             /**< Scene ID */
 };
 
 /**
@@ -508,4 +509,11 @@ struct aviutl2_host_app_table {
    * @param func_proc_clear_cache Callback function for cache clear
    */
   void (*register_clear_cache_handler)(void (*func_proc_clear_cache)(struct aviutl2_edit_section *edit));
+
+  /**
+   * Register function to be called right after scene is changed
+   * Also called when scene settings are updated
+   * @param func_proc_change_scene Callback function for scene change
+   */
+  void (*register_change_scene_handler)(void (*func_proc_change_scene)(struct aviutl2_edit_section *edit));
 };
