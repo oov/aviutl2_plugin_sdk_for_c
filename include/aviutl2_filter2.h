@@ -250,6 +250,48 @@ struct aviutl2_filter_item_button {
   void (*callback)(struct aviutl2_edit_section *edit);
 };
 
+/**
+ * String filter item (single line string)
+ */
+struct aviutl2_filter_item_string {
+  /**
+   * Setting type (L"string")
+   */
+  wchar_t const *type;
+
+  /**
+   * Setting name
+   */
+  wchar_t const *name;
+
+  /**
+   * Setting value
+   * Updated to current value pointer when filter function is called
+   */
+  wchar_t const *value;
+};
+
+/**
+ * Text filter item (multi-line string)
+ */
+struct aviutl2_filter_item_text {
+  /**
+   * Setting type (L"text")
+   */
+  wchar_t const *type;
+
+  /**
+   * Setting name
+   */
+  wchar_t const *name;
+
+  /**
+   * Setting value
+   * Updated to current value pointer when filter function is called
+   */
+  wchar_t const *value;
+};
+
 //--------------------------------
 
 /**

@@ -330,7 +330,7 @@ struct aviutl2_edit_handle {
 
   /**
    * Call callback function (func_proc_edit) to edit project data with parameter
-   * @param param Parameter to pass to callback function
+   * @param param Pointer to arbitrary user data
    * @param func_proc_edit Callback function for editing
    * @return true on success. Fails if edit is not available (during output)
    */
@@ -344,6 +344,37 @@ struct aviutl2_edit_handle {
    * @param info_size Size of edit info storage (only size bytes are retrieved if different from EDIT_INFO)
    */
   void (*get_edit_info)(struct aviutl2_edit_info *info, int info_size);
+
+  /**
+   * Restart the host application
+   */
+  void (*restart_host_app)(void);
+
+  /**
+   * Enumerate effect names via callback function (func_proc_enum_effect)
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_enum_effect Callback function for effect name enumeration
+   */
+  void (*enum_effect_name)(void *param,
+                           void (*func_proc_enum_effect)(void *param, wchar_t const *name, int type, int flag));
+};
+
+/**
+ * Effect type constants (may be extended in the future)
+ */
+enum {
+  aviutl2_effect_type_filter = 1,     /**< Filter effect */
+  aviutl2_effect_type_input = 2,      /**< Media input */
+  aviutl2_effect_type_transition = 3, /**< Scene change */
+};
+
+/**
+ * Effect flag constants (may be extended in the future)
+ */
+enum {
+  aviutl2_effect_flag_video = 1,  /**< Supports video */
+  aviutl2_effect_flag_audio = 2,  /**< Supports audio */
+  aviutl2_effect_flag_filter = 4, /**< Supports filter object */
 };
 
 //--------------------------------
