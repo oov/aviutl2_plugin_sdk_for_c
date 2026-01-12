@@ -292,6 +292,28 @@ struct aviutl2_filter_item_text {
   wchar_t const *value;
 };
 
+/**
+ * Folder selection filter item
+ * Example: aviutl2_filter_item_folder folder = { L"folder", L"Folder", L"" };
+ */
+struct aviutl2_filter_item_folder {
+  /**
+   * Setting type (L"folder")
+   */
+  wchar_t const *type;
+
+  /**
+   * Setting name
+   */
+  wchar_t const *name;
+
+  /**
+   * Setting value
+   * Updated to current value pointer when filter function is called
+   */
+  wchar_t const *value;
+};
+
 //--------------------------------
 
 /**
