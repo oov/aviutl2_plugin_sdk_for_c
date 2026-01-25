@@ -18,6 +18,9 @@
 //
 // Optional logger initialization function (see aviutl2_logger2.h). Called before InitializePlugin()
 //   void InitializeLogger(struct aviutl2_log_handle *logger)
+//
+// Optional config initialization function (see aviutl2_config2.h). Called before InitializePlugin()
+//   void InitializeConfig(struct aviutl2_config_handle *config)
 
 #include <stdbool.h>
 #include <stdint.h>

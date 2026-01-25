@@ -18,6 +18,9 @@
 //
 // Optional logger initialization function (see aviutl2_logger2.h). Called before InitializePlugin()
 //   void InitializeLogger(struct aviutl2_log_handle *logger)
+//
+// Optional config initialization function (see aviutl2_config2.h). Called before InitializePlugin()
+//   void InitializeConfig(struct aviutl2_config_handle *config)
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -230,7 +233,6 @@ struct aviutl2_filter_item_group {
 
 /**
  * Button filter item
- * Callback function is called when button is pressed
  * Note: Uses the same callback signature as edit callbacks in plugin2.h
  */
 struct aviutl2_filter_item_button {
@@ -245,7 +247,7 @@ struct aviutl2_filter_item_button {
   wchar_t const *name;
 
   /**
-   * Callback function
+   * Callback function when button is pressed
    */
   void (*callback)(struct aviutl2_edit_section *edit);
 };

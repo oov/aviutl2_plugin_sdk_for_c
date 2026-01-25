@@ -15,6 +15,7 @@
 /**
  * Logger handle interface for AviUtl2 plugins
  * Functions mirror the SDK logger callbacks and accept UTF-16 strings
+ * Log output is limited to 1024 characters
  */
 struct aviutl2_log_handle {
   /**

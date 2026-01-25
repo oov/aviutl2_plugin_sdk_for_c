@@ -18,6 +18,9 @@
 //
 // Optional logger initialization function (see aviutl2_logger2.h). Called before InitializePlugin()
 //   void InitializeLogger(struct aviutl2_log_handle *logger)
+//
+// Optional config initialization function (see aviutl2_config2.h). Called before InitializePlugin()
+//   void InitializeConfig(struct aviutl2_config_handle *config)
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -57,6 +60,30 @@ struct aviutl2_media_info {
   int audio_track_num; /**< Audio track count (0 if no audio) */
   double total_time;   /**< Total time (0 for still images) */
   int width, height;   /**< Resolution */
+};
+
+/**
+ * Module type constants
+ */
+enum {
+  aviutl2_module_type_script_filter = 1, /**< Filter script */
+  aviutl2_module_type_script_object = 2, /**< Object script */
+  aviutl2_module_type_script_camera = 3, /**< Camera script */
+  aviutl2_module_type_script_track = 4,  /**< Track bar script */
+  aviutl2_module_type_script_module = 5, /**< Script module */
+  aviutl2_module_type_plugin_input = 6,  /**< Input plugin */
+  aviutl2_module_type_plugin_output = 7, /**< Output plugin */
+  aviutl2_module_type_plugin_filter = 8, /**< Filter plugin */
+  aviutl2_module_type_plugin_common = 9, /**< Common plugin */
+};
+
+/**
+ * Module information
+ */
+struct aviutl2_module_info {
+  int type;                    /**< Module type (aviutl2_module_type_*) */
+  wchar_t const *name;         /**< Module name */
+  wchar_t const *information;  /**< Module information */
 };
 
 //--------------------------------
@@ -357,6 +384,14 @@ struct aviutl2_edit_handle {
    */
   void (*enum_effect_name)(void *param,
                            void (*func_proc_enum_effect)(void *param, wchar_t const *name, int type, int flag));
+
+  /**
+   * Enumerate module information via callback function (func_proc_enum_module)
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_enum_module Callback function for module information enumeration
+   */
+  void (*enum_module_info)(void *param,
+                           void (*func_proc_enum_module)(void *param, struct aviutl2_module_info *info));
 };
 
 /**
