@@ -65,6 +65,7 @@ struct aviutl2_config_handle {
 
   /**
    * Get color code defined in the config file
+   * For multiple colors, the first color is obtained
    * @param handle Config handle provided by the host
    * @param key Key name in [Color] section of config file (style.conf)
    * @return Defined color code value (returns 0 if cannot be obtained)
@@ -78,4 +79,13 @@ struct aviutl2_config_handle {
    * @return Defined size (returns 0 if cannot be obtained)
    */
   int (*get_layout_size)(struct aviutl2_config_handle *handle, char const *key);
+
+  /**
+   * Get color code defined in the config file
+   * @param handle Config handle provided by the host
+   * @param key Key name in [Color] section of config file (style.conf)
+   * @param index Index of the color to get (specify -1 to return the number of colors)
+   * @return Defined color code value (returns 0 if cannot be obtained)
+   */
+  int (*get_color_code_index)(struct aviutl2_config_handle *handle, char const *key, int index);
 };
