@@ -392,6 +392,12 @@ struct aviutl2_edit_handle {
    */
   void (*enum_module_info)(void *param,
                            void (*func_proc_enum_module)(void *param, struct aviutl2_module_info *info));
+
+  /**
+   * Get the main window handle of the host application
+   * @return Main window handle
+   */
+  HWND (*get_host_app_window)(void);
 };
 
 /**
@@ -582,4 +588,49 @@ struct aviutl2_host_app_table {
    * @param func_proc_change_scene Callback function for scene change
    */
   void (*register_change_scene_handler)(void (*func_proc_change_scene)(struct aviutl2_edit_section *edit));
+
+  /**
+   * Register import menu (added to File menu in window menu)
+   * Calls callback with param argument without using edit section
+   * @param name Import menu name
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_import Callback function for import menu selection
+   */
+  void (*register_import_menu_param)(wchar_t const *name, void *param, void (*func_proc_import)(void *param));
+
+  /**
+   * Register export menu (added to File menu in window menu)
+   * Calls callback with param argument without using edit section
+   * @param name Export menu name
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_export Callback function for export menu selection
+   */
+  void (*register_export_menu_param)(wchar_t const *name, void *param, void (*func_proc_export)(void *param));
+
+  /**
+   * Register layer context menu item (layer editor, no object selected, right-click menu)
+   * Calls callback with param argument without using edit section
+   * @param name Layer menu name
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_layer_menu Callback function for layer menu selection
+   */
+  void (*register_layer_menu_param)(wchar_t const *name, void *param, void (*func_proc_layer_menu)(void *param));
+
+  /**
+   * Register object context menu item (layer editor, object selected, right-click menu)
+   * Calls callback with param argument without using edit section
+   * @param name Object menu name
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_object_menu Callback function for object menu selection
+   */
+  void (*register_object_menu_param)(wchar_t const *name, void *param, void (*func_proc_object_menu)(void *param));
+
+  /**
+   * Register edit menu
+   * Calls callback with param argument without using edit section
+   * @param name Edit menu name. Use '\' in name to create hierarchical display
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_edit_menu Callback function for edit menu selection
+   */
+  void (*register_edit_menu_param)(wchar_t const *name, void *param, void (*func_proc_edit_menu)(void *param));
 };

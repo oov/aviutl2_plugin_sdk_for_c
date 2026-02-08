@@ -354,6 +354,7 @@ struct aviutl2_scene_info {
 struct aviutl2_object_info {
   /**
    * Object ID (unique ID within the application)
+   * Note: This is the unique ID of the drawing target object
    */
   int64_t id;
 
