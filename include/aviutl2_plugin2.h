@@ -10,6 +10,9 @@
 // Required plugin registration function
 //   void RegisterPlugin(struct aviutl2_host_app_table *host)
 //
+// Optional function to get required host version number
+//   uint32_t RequiredVersion() - Returns the required host application version number
+//
 // Optional plugin DLL initialization function (version is the host application version)
 //   bool InitializePlugin(uint32_t version)
 //
@@ -339,6 +342,55 @@ struct aviutl2_edit_section {
    * @param name Object name (specifying NULL or empty string sets to standard name)
    */
   void (*set_object_name)(aviutl2_object_handle object, wchar_t const *name);
+
+  /**
+   * Get layer name
+   * @param layer Layer number
+   * @return Pointer to layer name (returns NULL if using standard name).
+   *         Valid until layer is edited or callback processing ends
+   */
+  wchar_t const *(*get_layer_name)(int layer);
+
+  /**
+   * Set layer name
+   * @param layer Layer number
+   * @param name Layer name (specifying NULL or empty string sets to standard name)
+   */
+  void (*set_layer_name)(int layer, wchar_t const *name);
+
+  /**
+   * Get scene name
+   * @return Pointer to scene name.
+   *         Valid until scene is edited or callback processing ends
+   */
+  wchar_t const *(*get_scene_name)(void);
+
+  /**
+   * Set scene name (scene operations currently do not support Undo)
+   * @param name Scene name.
+   *             Scene name is required (does not change if NULL or empty string)
+   */
+  void (*set_scene_name)(wchar_t const *name);
+
+  /**
+   * Set scene resolution (scene operations currently do not support Undo)
+   * @param width Width
+   * @param height Height
+   */
+  void (*set_scene_size)(int width, int height);
+
+  /**
+   * Set scene frame rate (scene operations currently do not support Undo)
+   * @param rate Frame rate
+   * @param scale Frame rate scale
+   */
+  void (*set_scene_frame_rate)(int rate, int scale);
+
+  /**
+   * Set scene sampling rate (scene operations currently do not support Undo)
+   * @param sample_rate Sampling rate
+   */
+  void (*set_scene_sample_rate)(int sample_rate);
 };
 
 /**
@@ -347,7 +399,7 @@ struct aviutl2_edit_section {
 struct aviutl2_edit_handle {
   /**
    * Call callback function (func_proc_edit) to edit project data
-   * Callback function is called every time edit is repeated
+   * Edits within callback function are made under update lock state for exclusive control
    * Objects edited in callback function are automatically registered to Undo
    * Callback function is called from main thread
    * @param func_proc_edit Callback function for editing
@@ -365,8 +417,8 @@ struct aviutl2_edit_handle {
 
   /**
    * Get edit information
-   * Cannot be used if edit processing is already in progress (inside callback function with EDIT_SECTION argument etc.)
-   * Deadlocks if called in such situation
+   * Acquires read lock for exclusive control of edit information.
+   * If already locked in the same thread, retrieves without additional locking.
    * @param info Pointer to edit info storage
    * @param info_size Size of edit info storage (only size bytes are retrieved if different from EDIT_INFO)
    */

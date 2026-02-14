@@ -10,6 +10,9 @@
 // Required entry point returning the output plugin definition
 //   struct aviutl2_output_plugin_table *GetOutputPluginTable(void)
 //
+// Optional function to get required host version number
+//   uint32_t RequiredVersion() - Returns the required host application version number
+//
 // Optional plugin DLL initialization function (version is the host application version)
 //   bool InitializePlugin(uint32_t version)
 //
