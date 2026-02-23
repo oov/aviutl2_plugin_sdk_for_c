@@ -395,6 +395,7 @@ struct aviutl2_edit_section {
 
 /**
  * Edit handle
+ * Cannot be used from within RegisterPlugin processing except for get_host_app_window()
  */
 struct aviutl2_edit_handle {
   /**

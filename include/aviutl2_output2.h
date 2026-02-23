@@ -140,7 +140,7 @@ struct aviutl2_output_info {
  */
 struct aviutl2_output_plugin_table {
   /**
-   * Flags (reserved for future use)
+   * Flags
    */
   enum {
     /**
@@ -152,6 +152,12 @@ struct aviutl2_output_plugin_table {
      * Support audio output
      */
     aviutl2_output_plugin_table_flag_audio = 2,
+
+    /**
+     * Support still image output only (OUTPUT_INFO becomes 1-frame output)
+     * Note: Still image output does not notify completion or play sound
+     */
+    aviutl2_output_plugin_table_flag_image = 4,
   };
 
   /**

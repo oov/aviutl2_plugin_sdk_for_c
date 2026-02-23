@@ -251,6 +251,7 @@ struct aviutl2_filter_item_button {
 
   /**
    * Callback function when button is pressed
+   * Setting values of each setting item are updated when this callback is invoked
    */
   void (*callback)(struct aviutl2_edit_section *edit);
 };
