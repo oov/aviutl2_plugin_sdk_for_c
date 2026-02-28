@@ -7,6 +7,9 @@
 
 // Plugins must export the following functions for the host to call:
 //
+// Optional function to return a pointer to the common plugin structure
+//   struct aviutl2_common_plugin_table *GetCommonPluginTable(void)
+//
 // Required plugin registration function
 //   void RegisterPlugin(struct aviutl2_host_app_table *host)
 //
@@ -39,6 +42,16 @@ struct aviutl2_filter_plugin_table;
 struct aviutl2_script_module_table;
 struct aviutl2_edit_handle;
 struct aviutl2_project_file;
+
+/**
+ * Common plugin structure
+ */
+struct aviutl2_common_plugin_table {
+  wchar_t const *name;        /**< Plugin name */
+  wchar_t const *information; /**< Plugin information */
+};
+
+//--------------------------------
 
 /**
  * Object handle
@@ -533,6 +546,7 @@ struct aviutl2_host_app_table {
   /**
    * Set plugin information
    * @param information Plugin information
+   * @note GetCommonPluginTable() is now the recommended method
    */
   void (*set_plugin_information)(wchar_t const *information);
 
