@@ -700,4 +700,22 @@ struct aviutl2_host_app_table {
    * @param func_proc_edit_menu Callback function for edit menu selection
    */
   void (*register_edit_menu_param)(wchar_t const *name, void *param, void (*func_proc_edit_menu)(void *param));
+
+  /**
+   * Register a callback function for file drag & drop
+   * @param name Name displayed in tooltip during drag and input plugin settings
+   * @param filefilter File filter for supported drag & drop files
+   * @param func_proc_file_drop Callback function when file is dropped
+   */
+  void (*register_file_drop_handler)(wchar_t const *name, wchar_t const *filefilter, void (*func_proc_file_drop)(struct aviutl2_edit_section *edit, wchar_t const *file));
+
+  /**
+   * Register a callback function for file drag & drop
+   * Calls callback with param argument without using edit section
+   * @param name Name displayed in tooltip during drag and input plugin settings
+   * @param filefilter File filter for supported drag & drop files
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_file_drop Callback function when file is dropped
+   */
+  void (*register_file_drop_param_handler)(wchar_t const *name, wchar_t const *filefilter, void *param, void (*func_proc_file_drop)(void *param, wchar_t const *file));
 };
