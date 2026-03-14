@@ -256,6 +256,7 @@ struct aviutl2_edit_section {
   /**
    * Get layer and frame position from mouse coordinates
    * Calculates from coordinates of the last mouse move window message
+   * When obtained inside the callback function during file D&D, this becomes the drop position
    * @param layer Pointer to store layer number
    * @param frame Pointer to store frame number
    * @return true if mouse coordinates are on layer editor
