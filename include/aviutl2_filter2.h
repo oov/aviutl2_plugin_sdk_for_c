@@ -63,6 +63,7 @@ struct aviutl2_filter_item_track {
 
   /**
    * Setting step (1.0 / 0.1 / 0.01 / 0.001 )
+   * Note: Values of 0.0001 or less can also be specified, but will be adjusted according to the min/max range
    */
   double const step;
 };

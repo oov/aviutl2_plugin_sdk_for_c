@@ -235,6 +235,21 @@ struct aviutl2_script_module_param {
    * @return Element value (false if not available)
    */
   bool (*get_param_table_boolean)(int index, char const *key);
+
+  /**
+   * Add boolean array return value
+   * @param value Array of boolean values
+   * @param num Number of array elements
+   */
+  void (*push_result_array_boolean)(bool *value, int num);
+
+  /**
+   * Add boolean associative array return value
+   * @param key Array of key strings (UTF-8)
+   * @param value Array of boolean values
+   * @param num Number of array elements
+   */
+  void (*push_result_table_boolean)(char const **key, bool *value, int num);
 };
 
 //--------------------------------
