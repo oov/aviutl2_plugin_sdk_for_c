@@ -321,6 +321,22 @@ struct aviutl2_filter_item_folder {
   wchar_t const *value;
 };
 
+/**
+ * Separator filter item
+ * Example: aviutl2_filter_item_separator separator = { L"separator", L"Center Coordinates" };
+ */
+struct aviutl2_filter_item_separator {
+  /**
+   * Setting type (L"separator")
+   */
+  wchar_t const *type;
+
+  /**
+   * Setting name
+   */
+  wchar_t const *name;
+};
+
 //--------------------------------
 
 /**

@@ -178,7 +178,7 @@ struct aviutl2_edit_section {
    * @param object Object handle
    * @return Pointer to object alias data (UTF-8) (returns NULL if cannot be obtained).
    *         Same format as object alias file.
-   *         Returned string is valid until the end of callback function that uses this function
+   *         Returned string is valid until the next call to a function returning a string in the same thread
    */
   char const *(*get_object_alias)(aviutl2_object_handle object);
 
@@ -189,7 +189,7 @@ struct aviutl2_edit_section {
    * @param item Target configuration item name (key name in alias file)
    * @return Pointer to obtained configuration value (UTF-8) (returns NULL if cannot be obtained).
    *         Same format as configuration value in alias file.
-   *         Returned string is valid until the end of callback function that uses this function
+   *         Returned string is valid until the next call to a function returning a string in the same thread
    */
   char const *(*get_object_item_value)(aviutl2_object_handle object, wchar_t const *effect, wchar_t const *item);
 
@@ -465,6 +465,21 @@ struct aviutl2_edit_handle {
    * @return Main window handle
    */
   HWND (*get_host_app_window)(void);
+
+  /**
+   * Get the edit state
+   * @return Edit state (aviutl2_edit_state_*)
+   */
+  int (*get_edit_state)(void);
+};
+
+/**
+ * Edit state constants
+ */
+enum {
+  aviutl2_edit_state_edit = 0, /**< Editing */
+  aviutl2_edit_state_play = 1, /**< Preview playing */
+  aviutl2_edit_state_save = 2, /**< File output in progress */
 };
 
 /**
