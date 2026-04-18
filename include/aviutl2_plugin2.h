@@ -134,12 +134,12 @@ struct aviutl2_edit_info {
  */
 struct aviutl2_edit_section {
   /**
-   * Edit information
+   * Edit information (not available with call_read_section)
    */
   struct aviutl2_edit_info *info;
 
   /**
-   * Create object alias at specified position
+   * Create object alias at specified position (not available with call_read_section)
    * @param alias Pointer to object alias data (UTF-8). Same format as object alias file (.object)
    * @param layer Layer number to create
    * @param frame Frame number to create
@@ -194,7 +194,7 @@ struct aviutl2_edit_section {
   char const *(*get_object_item_value)(aviutl2_object_handle object, wchar_t const *effect, wchar_t const *item);
 
   /**
-   * Set object configuration item value as string
+   * Set object configuration item value as string (not available with call_read_section)
    * @param object Object handle
    * @param effect Target effect name (effect.name value in alias file)
    * @param item Target configuration item name (key name in alias file)
@@ -207,7 +207,7 @@ struct aviutl2_edit_section {
                                 char const *value);
 
   /**
-   * Move object
+   * Move object (not available with call_read_section)
    * @param object Object handle
    * @param layer Destination layer number
    * @param frame Destination frame number
@@ -216,7 +216,7 @@ struct aviutl2_edit_section {
   bool (*move_object)(aviutl2_object_handle object, int layer, int frame);
 
   /**
-   * Delete object
+   * Delete object (not available with call_read_section)
    * @param object Object handle
    */
   void (*delete_object)(aviutl2_object_handle object);
@@ -228,13 +228,14 @@ struct aviutl2_edit_section {
   aviutl2_object_handle (*get_focus_object)(void);
 
   /**
-   * Set object to be selected in object configuration window (set at end of callback)
+   * Set object to be selected in object configuration window (not available with call_read_section)
+   * Set at end of callback processing
    * @param object Object handle
    */
   void (*set_focus_object)(aviutl2_object_handle object);
 
   /**
-   * Get pointer to project file
+   * Get pointer to project file (not available with call_read_section)
    * @param edit Edit handle
    * @return Pointer to project file structure. Valid until callback processing ends
    */
@@ -254,7 +255,7 @@ struct aviutl2_edit_section {
   int (*get_selected_object_num)(void);
 
   /**
-   * Get layer and frame position from mouse coordinates
+   * Get layer and frame position from mouse coordinates (not available with call_read_section)
    * Calculates from coordinates of the last mouse move window message
    * When obtained inside the callback function during file D&D, this becomes the drop position
    * @param layer Pointer to store layer number
@@ -264,7 +265,7 @@ struct aviutl2_edit_section {
   bool (*get_mouse_layer_frame)(int *layer, int *frame);
 
   /**
-   * Get layer and frame position from specified screen coordinates
+   * Get layer and frame position from specified screen coordinates (not available with call_read_section)
    * @param x Screen X coordinate
    * @param y Screen Y coordinate
    * @param layer Pointer to store layer number
@@ -292,7 +293,7 @@ struct aviutl2_edit_section {
   bool (*get_media_info)(wchar_t const *file, struct aviutl2_media_info *info, int info_size);
 
   /**
-   * Create object from media file at specified position
+   * Create object from media file at specified position (not available with call_read_section)
    * @param file Media file path
    * @param layer Layer number to create
    * @param frame Frame number to create
@@ -303,7 +304,7 @@ struct aviutl2_edit_section {
   aviutl2_object_handle (*create_object_from_media_file)(wchar_t const *file, int layer, int frame, int length);
 
   /**
-   * Create object at specified position
+   * Create object at specified position (not available with call_read_section)
    * @param effect Effect name (effect.name value in alias file)
    * @param layer Layer number to create
    * @param frame Frame number to create
@@ -314,28 +315,31 @@ struct aviutl2_edit_section {
   aviutl2_object_handle (*create_object)(wchar_t const *effect, int layer, int frame, int length);
 
   /**
-   * Set current layer/frame position. Adjusted to available range
+   * Set current layer/frame position (not available with call_read_section)
+   * Adjusted to available range
    * @param layer Layer number
    * @param frame Frame number
    */
   void (*set_cursor_layer_frame)(int layer, int frame);
 
   /**
-   * Set display start position of layer/frame in layer editor. Adjusted to available range
+   * Set display start position of layer/frame in layer editor (not available with call_read_section)
+   * Adjusted to available range
    * @param layer Display start layer number
    * @param frame Display start frame number
    */
   void (*set_display_layer_frame)(int layer, int frame);
 
   /**
-   * Set frame range selection. Adjusted to available range
+   * Set frame range selection (not available with call_read_section)
+   * Adjusted to available range
    * @param start Start frame number
    * @param end End frame number. Specifying -1 for both start and end clears the selection
    */
   void (*set_select_range)(int start, int end);
 
   /**
-   * Set grid(BPM)
+   * Set grid(BPM) (not available with call_read_section)
    * @param tempo Tempo
    * @param beat Beat
    * @param offset Base time
@@ -351,7 +355,7 @@ struct aviutl2_edit_section {
   wchar_t const *(*get_object_name)(aviutl2_object_handle object);
 
   /**
-   * Set object name
+   * Set object name (not available with call_read_section)
    * @param object Object handle
    * @param name Object name (specifying NULL or empty string sets to standard name)
    */
@@ -366,7 +370,7 @@ struct aviutl2_edit_section {
   wchar_t const *(*get_layer_name)(int layer);
 
   /**
-   * Set layer name
+   * Set layer name (not available with call_read_section)
    * @param layer Layer number
    * @param name Layer name (specifying NULL or empty string sets to standard name)
    */
@@ -380,28 +384,32 @@ struct aviutl2_edit_section {
   wchar_t const *(*get_scene_name)(void);
 
   /**
-   * Set scene name (scene operations currently do not support Undo)
+   * Set scene name (not available with call_read_section)
+   * Scene operations currently do not support Undo
    * @param name Scene name.
    *             Scene name is required (does not change if NULL or empty string)
    */
   void (*set_scene_name)(wchar_t const *name);
 
   /**
-   * Set scene resolution (scene operations currently do not support Undo)
+   * Set scene resolution (not available with call_read_section)
+   * Scene operations currently do not support Undo
    * @param width Width
    * @param height Height
    */
   void (*set_scene_size)(int width, int height);
 
   /**
-   * Set scene frame rate (scene operations currently do not support Undo)
+   * Set scene frame rate (not available with call_read_section)
+   * Scene operations currently do not support Undo
    * @param rate Frame rate
    * @param scale Frame rate scale
    */
   void (*set_scene_frame_rate)(int rate, int scale);
 
   /**
-   * Set scene sampling rate (scene operations currently do not support Undo)
+   * Set scene sampling rate (not available with call_read_section)
+   * Scene operations currently do not support Undo
    * @param sample_rate Sampling rate
    */
   void (*set_scene_sample_rate)(int sample_rate);
@@ -471,6 +479,25 @@ struct aviutl2_edit_handle {
    * @return Edit state (aviutl2_edit_state_*)
    */
   int (*get_edit_state)(void);
+
+  /**
+   * Call callback function (func_proc_read_section) to read project data
+   * During read, data is in read-lock state so that data is not updated, and processing is done within the callback function
+   * Update functions of EDIT_SECTION etc. cannot be used. See notes on each item of EDIT_SECTION
+   * Callback function is called from the same thread as the caller
+   * @param func_proc_read_section Callback function
+   * @return true on success. Fails if read is not available (during output, etc.)
+   */
+  bool (*call_read_section)(void (*func_proc_read_section)(struct aviutl2_edit_section *edit));
+
+  /**
+   * call_read_section() with param argument
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_read_section Callback function
+   * @return true on success. Fails if read is not available (during output, etc.)
+   */
+  bool (*call_read_section_param)(void *param,
+                                  void (*func_proc_read_section)(void *param, struct aviutl2_edit_section *edit));
 };
 
 /**
