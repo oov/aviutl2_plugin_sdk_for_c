@@ -424,7 +424,7 @@ struct aviutl2_edit_handle {
    * Call callback function (func_proc_edit) to edit project data
    * Edits within callback function are made under update lock state for exclusive control
    * Objects edited in callback function are automatically registered to Undo
-   * Callback function is called from main thread
+   * Callback function is called from the same thread as the caller
    * @param func_proc_edit Callback function for editing
    * @return true on success. Fails if edit is not available (during output)
    */
@@ -498,6 +498,17 @@ struct aviutl2_edit_handle {
    */
   bool (*call_read_section_param)(void *param,
                                   void (*func_proc_read_section)(void *param, struct aviutl2_edit_section *edit));
+
+  /**
+   * Enumerate effect setting items via callback function (func_proc_enum_effect_item)
+   * @param effect Target effect name (effect.name value in alias file)
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_enum_effect_item Callback function for effect setting item enumeration
+   * @return true if obtained. Fails if target is not found
+   */
+  bool (*enum_effect_item)(wchar_t const *effect,
+                           void *param,
+                           void (*func_proc_enum_effect_item)(void *param, wchar_t const *name, int type));
 };
 
 /**
@@ -516,6 +527,8 @@ enum {
   aviutl2_effect_type_filter = 1,     /**< Filter effect */
   aviutl2_effect_type_input = 2,      /**< Media input */
   aviutl2_effect_type_transition = 3, /**< Scene change */
+  aviutl2_effect_type_control = 4,    /**< Object control */
+  aviutl2_effect_type_output = 5,     /**< Media output */
 };
 
 /**
@@ -525,6 +538,28 @@ enum {
   aviutl2_effect_flag_video = 1,  /**< Supports video */
   aviutl2_effect_flag_audio = 2,  /**< Supports audio */
   aviutl2_effect_flag_filter = 4, /**< Supports filter object */
+};
+
+/**
+ * Effect item type constants (may be extended in the future)
+ */
+enum {
+  aviutl2_effect_item_type_integer = 1, /**< Integer */
+  aviutl2_effect_item_type_number = 2,  /**< Number */
+  aviutl2_effect_item_type_check = 3,   /**< Check box */
+  aviutl2_effect_item_type_text = 4,    /**< Text */
+  aviutl2_effect_item_type_string = 5,  /**< String */
+  aviutl2_effect_item_type_file = 6,    /**< File */
+  aviutl2_effect_item_type_color = 7,   /**< Color */
+  aviutl2_effect_item_type_select = 8,  /**< List selection */
+  aviutl2_effect_item_type_scene = 9,   /**< Scene */
+  aviutl2_effect_item_type_range = 10,  /**< Layer range */
+  aviutl2_effect_item_type_combo = 11,  /**< Combination of list and text */
+  aviutl2_effect_item_type_mask = 12,   /**< Mask */
+  aviutl2_effect_item_type_font = 13,   /**< Font */
+  aviutl2_effect_item_type_figure = 14, /**< Figure */
+  aviutl2_effect_item_type_data = 15,   /**< Data */
+  aviutl2_effect_item_type_folder = 16, /**< Folder */
 };
 
 //--------------------------------
