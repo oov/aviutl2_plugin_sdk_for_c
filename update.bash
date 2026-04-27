@@ -41,5 +41,5 @@ fi
 echo "Header changes detected. Launching AI to process updates..."
 
 pushd "$SCRIPT_DIR" > /dev/null
-npx -y @github/copilot --allow-all-paths --allow-all-tools --model claude-opus-4.5 -p "$(cat UPDATE-PROMPT.md)"
+npx -y @github/copilot --allow-all-paths --allow-all-tools --model gpt-5.4 -p "$(cat UPDATE-PROMPT.md)"
 popd > /dev/null
