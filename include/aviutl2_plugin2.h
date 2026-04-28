@@ -424,7 +424,7 @@ struct aviutl2_edit_handle {
    * Call callback function (func_proc_edit) to edit project data
    * Edits within callback function are made under update lock state for exclusive control
    * Objects edited in callback function are automatically registered to Undo
-   * Callback function is called from the same thread as the caller
+   * Callback function is called from the main thread
    * @param func_proc_edit Callback function for editing
    * @return true on success. Fails if edit is not available (during output)
    */
@@ -538,6 +538,7 @@ enum {
   aviutl2_effect_flag_video = 1,  /**< Supports video */
   aviutl2_effect_flag_audio = 2,  /**< Supports audio */
   aviutl2_effect_flag_filter = 4, /**< Supports filter object */
+  aviutl2_effect_flag_camera = 8, /**< Supports camera effects */
 };
 
 /**
