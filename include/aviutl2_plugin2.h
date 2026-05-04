@@ -797,4 +797,31 @@ struct aviutl2_host_app_table {
    * @param func_proc_file_drop Callback function when file is dropped
    */
   void (*register_file_drop_param_handler)(wchar_t const *name, wchar_t const *filefilter, void *param, void (*func_proc_file_drop)(void *param, wchar_t const *file));
+
+  /**
+   * Register an object-edit item menu (added to the object edit right-click menu)
+   * @param name Item menu name
+   * @param allow_effect_only Whether to allow effect-only selection. If true, callbacks may be invoked with item as
+   *                          NULL
+   * @param func_proc_item_menu Callback function when item menu is selected
+   * @note Callback arguments use the same format as get_object_item_value()
+   */
+  void (*register_object_item_menu)(wchar_t const *name,
+                                    bool allow_effect_only,
+                                    void (*func_proc_item_menu)(struct aviutl2_edit_section *edit, aviutl2_object_handle object, wchar_t const *effect, wchar_t const *item));
+
+  /**
+   * Register an object-edit item menu (added to the object edit right-click menu)
+   * Calls callback with param argument without using edit section
+   * @param name Item menu name
+   * @param allow_effect_only Whether to allow effect-only selection. If true, callbacks may be invoked with item as
+   *                          NULL
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_item_menu Callback function when item menu is selected
+   * @note Callback arguments use the same format as get_object_item_value()
+   */
+  void (*register_object_item_menu_param)(wchar_t const *name,
+                                          bool allow_effect_only,
+                                          void *param,
+                                          void (*func_proc_item_menu)(void *param, aviutl2_object_handle object, wchar_t const *effect, wchar_t const *item));
 };
