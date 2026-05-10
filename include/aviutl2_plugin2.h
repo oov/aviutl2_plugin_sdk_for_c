@@ -413,6 +413,47 @@ struct aviutl2_edit_section {
    * @param sample_rate Sampling rate
    */
   void (*set_scene_sample_rate)(int sample_rate);
+
+  /**
+   * Get layer visible/hidden state
+   * @param layer Layer number
+   * @return true if the layer is visible
+   */
+  bool (*get_layer_enable)(int layer);
+
+  /**
+   * Set layer visible/hidden state (not available with call_read_section)
+   * @param layer Layer number
+   * @param enable Layer visibility state to set
+   */
+  void (*set_layer_enable)(int layer, bool enable);
+
+  /**
+   * Get layer lock state
+   * @param layer Layer number
+   * @return true if the layer is locked
+   */
+  bool (*get_layer_lock)(int layer);
+
+  /**
+   * Set layer lock state (not available with call_read_section)
+   * @param layer Layer number
+   * @param lock Layer lock state to set
+   */
+  void (*set_layer_lock)(int layer, bool lock);
+
+  /**
+   * Get the number of sections in an object
+   * @param object Object handle
+   * @return Number of sections
+   */
+  int (*get_object_section_num)(aviutl2_object_handle object);
+
+  /**
+   * Get the position of the currently selected object section
+   * @return Section number (-1 if nothing is selected)
+   */
+  int (*get_focus_object_section)(void);
 };
 
 /**
@@ -695,14 +736,14 @@ struct aviutl2_host_app_table {
 
   /**
    * Register layer context menu item (layer editor, no selection state)
-   * @param name Menu item name
+   * @param name Menu item name. Use '\' in name to create hierarchical display
    * @param func_proc_layer_menu Callback invoked on menu selection
    */
   void (*register_layer_menu)(wchar_t const *name, void (*func_proc_layer_menu)(struct aviutl2_edit_section *edit));
 
   /**
    * Register object context menu item (layer editor, object selected state)
-   * @param name Menu item name
+   * @param name Menu item name. Use '\' in name to create hierarchical display
    * @param func_proc_object_menu Callback invoked on menu selection
    */
   void (*register_object_menu)(wchar_t const *name, void (*func_proc_object_menu)(struct aviutl2_edit_section *edit));
@@ -756,7 +797,7 @@ struct aviutl2_host_app_table {
   /**
    * Register layer context menu item (layer editor, no object selected, right-click menu)
    * Calls callback with param argument without using edit section
-   * @param name Layer menu name
+   * @param name Layer menu name. Use '\' in name to create hierarchical display
    * @param param Pointer to arbitrary user data
    * @param func_proc_layer_menu Callback function for layer menu selection
    */
@@ -765,7 +806,7 @@ struct aviutl2_host_app_table {
   /**
    * Register object context menu item (layer editor, object selected, right-click menu)
    * Calls callback with param argument without using edit section
-   * @param name Object menu name
+   * @param name Object menu name. Use '\' in name to create hierarchical display
    * @param param Pointer to arbitrary user data
    * @param func_proc_object_menu Callback function for object menu selection
    */
@@ -800,7 +841,7 @@ struct aviutl2_host_app_table {
 
   /**
    * Register an object-edit item menu (added to the object edit right-click menu)
-   * @param name Item menu name
+   * @param name Item menu name. Use '\' in name to create hierarchical display
    * @param allow_effect_only Whether to allow effect-only selection. If true, callbacks may be invoked with item as
    *                          NULL
    * @param func_proc_item_menu Callback function when item menu is selected
@@ -813,7 +854,7 @@ struct aviutl2_host_app_table {
   /**
    * Register an object-edit item menu (added to the object edit right-click menu)
    * Calls callback with param argument without using edit section
-   * @param name Item menu name
+   * @param name Item menu name. Use '\' in name to create hierarchical display
    * @param allow_effect_only Whether to allow effect-only selection. If true, callbacks may be invoked with item as
    *                          NULL
    * @param param Pointer to arbitrary user data
@@ -824,4 +865,11 @@ struct aviutl2_host_app_table {
                                           bool allow_effect_only,
                                           void *param,
                                           void (*func_proc_item_menu)(void *param, aviutl2_object_handle object, wchar_t const *effect, wchar_t const *item));
+
+  /**
+   * Register a script module by specifying the module name
+   * @param script_module_table Script module table
+   * @param module_name Module name
+   */
+  void (*register_script_module_name)(struct aviutl2_script_module_table *script_module_table, wchar_t const *module_name);
 };

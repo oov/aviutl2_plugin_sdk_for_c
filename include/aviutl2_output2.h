@@ -33,6 +33,9 @@
 #endif
 #include <windows.h>
 
+// Defined in aviutl2_plugin2.h
+struct aviutl2_project_file;
+
 /**
  * Output information
  */
@@ -158,6 +161,12 @@ struct aviutl2_output_plugin_table {
      * Note: Still image output does not notify completion or play sound
      */
     aviutl2_output_plugin_table_flag_image = 4,
+
+    /**
+     * Support keeping output settings in the project file
+     * Note: Specify this when the project file should store output settings
+     */
+    aviutl2_output_plugin_table_flag_project_config = 8,
   };
 
   /**
@@ -200,4 +209,20 @@ struct aviutl2_output_plugin_table {
    * @return Output config text (the function caller manages the returned text lifetime)
    */
   wchar_t const *(*func_get_config_text)(void);
+
+  /**
+   * Function pointer called when the project file requests loading output settings
+   * Called only when aviutl2_output_plugin_table_flag_project_config is enabled
+   * @param project Pointer to project file structure
+   * @return true if loading succeeded, false otherwise
+   */
+  bool (*func_load_project_config)(struct aviutl2_project_file *project);
+
+  /**
+   * Function pointer called when the project file requests writing output settings
+   * Called only when aviutl2_output_plugin_table_flag_project_config is enabled
+   * @param project Pointer to project file structure
+   * @return true if saving succeeded, false otherwise
+   */
+  bool (*func_save_project_config)(struct aviutl2_project_file *project);
 };
