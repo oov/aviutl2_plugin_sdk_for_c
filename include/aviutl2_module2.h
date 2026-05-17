@@ -24,9 +24,14 @@
 //
 // Optional config initialization function (see aviutl2_config2.h). Called before InitializePlugin()
 //   void InitializeConfig(struct aviutl2_config_handle *config)
+//
+// Optional cache initialization function (see aviutl2_cache2.h)
+//   void InitializeCache(struct aviutl2_cache_handle *cache)
 
 #include <stdbool.h>
 #include <stdint.h>
+
+struct aviutl2_edit_section;
 
 /**
  * Script module parameter interface
@@ -250,6 +255,14 @@ struct aviutl2_script_module_param {
    * @param num Number of array elements
    */
   void (*push_result_table_boolean)(char const **key, bool *value, int num);
+
+  //--------------------------------
+
+  /**
+   * Edit section interface
+   * Read-only functions are available during script processing
+   */
+  struct aviutl2_edit_section *edit;
 };
 
 //--------------------------------

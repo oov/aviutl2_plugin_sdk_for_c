@@ -206,7 +206,8 @@ struct aviutl2_output_plugin_table {
 
   /**
    * Function pointer called when output config text is requested (NULL if not supported)
-   * @return Output config text (the function caller manages the returned text lifetime)
+   * @return Pointer to output config text
+   *         Valid until this function is called again
    */
   wchar_t const *(*func_get_config_text)(void);
 

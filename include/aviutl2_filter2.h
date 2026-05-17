@@ -24,12 +24,23 @@
 //
 // Optional config initialization function (see aviutl2_config2.h). Called before InitializePlugin()
 //   void InitializeConfig(struct aviutl2_config_handle *config)
+//
+// Optional cache initialization function (see aviutl2_cache2.h)
+//   void InitializeCache(struct aviutl2_cache_handle *cache)
 
 #include <stdbool.h>
 #include <stdint.h>
 
 struct ID3D11Texture2D;
 struct aviutl2_edit_section;
+
+/**
+ * Object handle
+ */
+#ifndef AVIUTL2_OBJECT_HANDLE_DEFINED
+#define AVIUTL2_OBJECT_HANDLE_DEFINED
+typedef void *aviutl2_object_handle;
+#endif
 
 /**
  * Track bar filter item
@@ -340,6 +351,98 @@ struct aviutl2_filter_item_separator {
 //--------------------------------
 
 /**
+ * Vertex data structure (color)
+ */
+struct aviutl2_vertex_color {
+  float x, y, z;    /**< Vertex coordinates */
+  float r, g, b, a; /**< Vertex color (premultiplied alpha in the range 0.0 to 1.0) */
+};
+
+/**
+ * Vertex data structure (color, normal)
+ */
+struct aviutl2_vertex_color_norm {
+  float x, y, z;    /**< Vertex coordinates */
+  float r, g, b, a; /**< Vertex color (premultiplied alpha in the range 0.0 to 1.0) */
+  float vx, vy, vz; /**< Normal vector */
+};
+
+/**
+ * Vertex data structure (texture)
+ */
+struct aviutl2_vertex_texture {
+  float x, y, z; /**< Vertex coordinates */
+  float u, v;    /**< Texture coordinates (normalized coordinates in the range 0.0 to 1.0) */
+  float a;       /**< Vertex alpha value */
+};
+
+/**
+ * Vertex data structure (texture, normal)
+ */
+struct aviutl2_vertex_texture_norm {
+  float x, y, z;    /**< Vertex coordinates */
+  float u, v;       /**< Texture coordinates (normalized coordinates in the range 0.0 to 1.0) */
+  float a;          /**< Vertex alpha value */
+  float vx, vy, vz; /**< Normal vector */
+};
+
+/**
+ * Vertex list type
+ */
+enum aviutl2_vertex_type {
+  aviutl2_vertex_type_triangle_color = 1,        /**< List of aviutl2_vertex_color triangles (vertex count must be a multiple of 3) */
+  aviutl2_vertex_type_triangle_color_norm = 2,   /**< List of aviutl2_vertex_color_norm triangles (vertex count must be a multiple of 3) */
+  aviutl2_vertex_type_triangle_texture = 3,      /**< List of aviutl2_vertex_texture triangles (vertex count must be a multiple of 3) */
+  aviutl2_vertex_type_triangle_texture_norm = 4, /**< List of aviutl2_vertex_texture_norm triangles (vertex count must be a multiple of 3) */
+  aviutl2_vertex_type_quad_color = 5,            /**< List of aviutl2_vertex_color quads (vertex count must be a multiple of 4) */
+  aviutl2_vertex_type_quad_color_norm = 6,       /**< List of aviutl2_vertex_color_norm quads (vertex count must be a multiple of 4) */
+  aviutl2_vertex_type_quad_texture = 7,          /**< List of aviutl2_vertex_texture quads (vertex count must be a multiple of 4) */
+  aviutl2_vertex_type_quad_texture_norm = 8,     /**< List of aviutl2_vertex_texture_norm quads (vertex count must be a multiple of 4) */
+};
+
+/**
+ * Sampler type
+ */
+enum aviutl2_sampler_mode {
+  aviutl2_sampler_mode_clip = 0,   /**< Transparent color outside the region */
+  aviutl2_sampler_mode_clamp = 1,  /**< Outermost color outside the region */
+  aviutl2_sampler_mode_loop = 2,   /**< Loop outside the region */
+  aviutl2_sampler_mode_mirror = 3, /**< Loop while mirroring the region outside the bounds */
+  aviutl2_sampler_mode_dot = 4,    /**< No scaling interpolation (transparent color outside the region) */
+};
+
+/**
+ * Blend mode type
+ */
+enum aviutl2_blend_mode {
+  aviutl2_blend_mode_none = 0,        /**< Normal */
+  aviutl2_blend_mode_add = 1,         /**< Add */
+  aviutl2_blend_mode_sub = 2,         /**< Subtract */
+  aviutl2_blend_mode_mul = 3,         /**< Multiply */
+  aviutl2_blend_mode_screen = 4,      /**< Screen */
+  aviutl2_blend_mode_overlay = 5,     /**< Overlay */
+  aviutl2_blend_mode_light = 6,       /**< Comparison (lighter) */
+  aviutl2_blend_mode_dark = 7,        /**< Comparison (darker) */
+  aviutl2_blend_mode_brightness = 8,  /**< Brightness */
+  aviutl2_blend_mode_chroma = 9,      /**< Chroma */
+  aviutl2_blend_mode_shadow = 10,     /**< Shadow */
+  aviutl2_blend_mode_light_dark = 11, /**< Light and dark */
+  aviutl2_blend_mode_diff = 12,       /**< Difference */
+};
+
+/**
+ * Billboard type
+ */
+enum aviutl2_billboard_mode {
+  aviutl2_billboard_mode_none = 0,      /**< Standard orientation (do nothing) */
+  aviutl2_billboard_mode_side = 1,      /**< Face the camera only horizontally */
+  aviutl2_billboard_mode_direction = 2, /**< Face the camera only vertically and horizontally */
+  aviutl2_billboard_mode_camera = 3,    /**< Face the camera */
+};
+
+//--------------------------------
+
+/**
  * RGBA 32-bit structure
  */
 struct aviutl2_pixel_rgba {
@@ -433,6 +536,24 @@ struct aviutl2_object_info {
    * Flags
    */
   int flag;
+
+  /**
+   * Current layer number of the object
+   * Note: This is the layer number of the drawing target object
+   */
+  int layer;
+
+  /**
+   * Current target index for multi-object processing
+   * Note: For individual objects
+   */
+  int index;
+
+  /**
+   * Number of targets for multi-object processing (1 = single object / 0 = unknown)
+   * Note: For individual objects
+   */
+  int num;
 };
 
 enum {
@@ -450,6 +571,24 @@ enum {
 static inline bool aviutl2_object_info_is_filter_object(struct aviutl2_object_info const *info) {
   return info->flag & aviutl2_object_info_flag_filter_object;
 }
+
+/**
+ * Object image parameter structure
+ */
+struct aviutl2_object_image_param {
+  float x, y, z;    /**< Base coordinates */
+  float rx, ry, rz; /**< Rotation angle (360.0 is one full rotation) */
+  float sx, sy, sz; /**< Scale (1.0 = normal size) */
+  float cx, cy, cz; /**< Center coordinates (relative to the base coordinates) */
+  float alpha;      /**< Opacity (0.0 to 1.0 / 0.0 = transparent / 1.0 = opaque) */
+};
+
+/**
+ * Object audio parameter structure
+ */
+struct aviutl2_object_audio_param {
+  float vol_l, vol_r; /**< Volume multiplier (1.0 = normal) */
+};
 
 //--------------------------------
 
@@ -494,6 +633,137 @@ struct aviutl2_filter_proc_video {
    *         Valid until filter processing ends
    */
   struct ID3D11Texture2D *(*get_framebuffer_texture2d)(void);
+
+  /**
+   * Edit section interface
+   * Read-only functions are available during filter processing
+   */
+  struct aviutl2_edit_section *edit;
+
+  /**
+   * Current image parameter information of the object
+   * Parameters can be modified directly
+   * Note: These parameters are relative to the image output item parameters (same as script obj.ox and similar)
+   */
+  struct aviutl2_object_image_param *param;
+
+  /**
+   * Get image output item parameters of the specified object
+   * @param object Target object handle (specify NULL to target the current object)
+   * @param offset Time offset to retrieve in seconds (0 for current time)
+   * @param param Pointer to parameter storage
+   * @param param_size Size of parameter storage. Only that size is retrieved
+   * @return false if the parameters cannot be obtained (for example, if a non-image object is specified)
+   */
+  bool (*get_output_image_param)(aviutl2_object_handle object,
+                                 double offset,
+                                 struct aviutl2_object_image_param *param,
+                                 int param_size);
+
+  /**
+   * Get the image object on the specified layer
+   * @param layer Target layer number
+   * @param offset Time offset to retrieve in seconds (0 for current time)
+   * @return Handle of the obtained object (returns NULL if it does not exist)
+   */
+  aviutl2_object_handle (*get_image_object)(int layer, double offset);
+
+  /**
+   * Draw the specified image resource to the framebuffer
+   * @param image Image resource name. If NULL, the current object is used.
+   *              "tempbuffer" = virtual buffer
+   *              "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
+   *              "image:xxxx" = image file (xxxx is an image file path). The image is cached in VRAM
+   * @param x Base X coordinate
+   * @param y Base Y coordinate
+   * @param z Base Z coordinate
+   * @param rx Rotation angle around X (360.0 is one full rotation)
+   * @param ry Rotation angle around Y (360.0 is one full rotation)
+   * @param rz Rotation angle around Z (360.0 is one full rotation)
+   * @param sx Scale on X (1.0 = normal size)
+   * @param sy Scale on Y (1.0 = normal size)
+   * @param sz Scale on Z (1.0 = normal size)
+   * @param alpha Opacity (0.0 to 1.0 / 0.0 = transparent / 1.0 = opaque)
+   * @return false on failure (for example, if the image resource name is invalid)
+   */
+  bool (*draw_image)(wchar_t const *image,
+                     float x,
+                     float y,
+                     float z,
+                     float rx,
+                     float ry,
+                     float rz,
+                     float sx,
+                     float sy,
+                     float sz,
+                     float alpha);
+
+  /**
+   * Draw a polygon with the specified vertex list to the framebuffer
+   * @param vertex_type Vertex list type
+   * @param vertex_list Pointer to the vertex data list (pointer to a buffer of the specified vertex type)
+   * @param vertex_num Number of vertices in the list
+   * @param image Texture image resource name, only when needed. If NULL, the current object is used.
+   *              "tempbuffer" = virtual buffer
+   *              "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
+   *              "image:xxxx" = image file (xxxx is an image file path). The image is cached in VRAM
+   * @return false on failure (for example, if the vertex count is invalid)
+   */
+  bool (*draw_poly)(enum aviutl2_vertex_type vertex_type, void *vertex_list, int vertex_num, wchar_t const *image);
+
+  /**
+   * Set the default anchor frame
+   * Usually this is set automatically
+   * Use this when rendering the object yourself with draw_image() or similar and returning false from func_proc_video()
+   * @param width Object width (specify 0 to use a fixed-size anchor frame)
+   * @param height Object height (specify 0 to use a fixed-size anchor frame)
+   */
+  void (*set_default_anchor)(int width, int height);
+
+  /**
+   * Set the blend mode for drawing
+   * Drawing becomes heavier when a blend mode is used
+   * @param blend Blend mode
+   */
+  void (*set_blend_mode)(enum aviutl2_blend_mode blend);
+
+  /**
+   * Set the shininess for drawing
+   * Used when the light source settings of camera control are enabled
+   * @param shine Shininess (0.0 to 1.0)
+   */
+  void (*set_material_shine)(float shine);
+
+  /**
+   * Set the sampler for drawing
+   * @param sampler Sampler type
+   */
+  void (*set_sampler_mode)(enum aviutl2_sampler_mode sampler);
+
+  /**
+   * Set whether back faces are hidden during drawing
+   * @param culling true to hide back faces
+   */
+  void (*set_culling_state)(bool culling);
+
+  /**
+   * Set whether the object faces the camera during drawing
+   * @param billboard Billboard type
+   */
+  void (*set_billboard_mode)(enum aviutl2_billboard_mode billboard);
+
+  /**
+   * Create an image resource (writes data to VRAM)
+   * Image resources can be used for draw_image() and similar drawing
+   * If an existing image resource name is specified, the resource is updated
+   * @param image Image resource name. If NULL, the current object is used.
+   *              "tempbuffer" = virtual buffer
+   *              "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
+   * @param buffer Pointer to image data (if NULL, the image size is changed with uninitialized data)
+   * @param width Image width
+   * @param height Image height
+   */
+  void (*create_image_resource)(wchar_t const *image, struct aviutl2_pixel_rgba *buffer, int width, int height);
 };
 
 /**
@@ -523,6 +793,40 @@ struct aviutl2_filter_proc_audio {
    * @param channel Audio channel number (0 = left/mono, 1 = right)
    */
   void (*set_sample_data)(float *buffer, int channel);
+
+  /**
+   * Edit section interface
+   * Read-only functions are available during filter processing
+   */
+  struct aviutl2_edit_section *edit;
+
+  /**
+   * Current audio parameter information of the object
+   * Parameters can be modified directly
+   * Note: These parameters are relative to the audio output item parameters
+   */
+  struct aviutl2_object_audio_param *param;
+
+  /**
+   * Get audio output item parameters of the specified object
+   * @param object Target object handle (specify NULL to target the current object)
+   * @param offset Time offset to retrieve in seconds (0 for current time)
+   * @param param Pointer to parameter storage
+   * @param param_size Size of parameter storage. Only that size is retrieved
+   * @return false if the parameters cannot be obtained (for example, if a non-audio object is specified)
+   */
+  bool (*get_output_audio_param)(aviutl2_object_handle object,
+                                 double offset,
+                                 struct aviutl2_object_audio_param *param,
+                                 int param_size);
+
+  /**
+   * Get the audio object at the specified layer position
+   * @param layer Target layer number
+   * @param offset Time offset to retrieve in seconds (0 for current time)
+   * @return Handle of the obtained object (returns NULL if it does not exist)
+   */
+  aviutl2_object_handle (*get_audio_object)(int layer, double offset);
 };
 
 //--------------------------------
