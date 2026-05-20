@@ -38,6 +38,11 @@ if [ -z "$CHANGED_HEADERS" ]; then
     exit 0
 fi
 
+if [ "${CODEX_DEFER_IF_NEEDED:-}" = "1" ]; then
+    echo "Codex is required for header changes. Deferring until Codex is available."
+    exit 78
+fi
+
 echo "Header changes detected. Launching AI to process updates..."
 
 pushd "$SCRIPT_DIR" > /dev/null

@@ -19,10 +19,26 @@ jobs:
           submodules: false
           fetch-depth: 1
 
+      - name: Run update script without Codex
+        id: update_without_codex
+        env:
+          CODEX_DEFER_IF_NEEDED: 1
+        run: |
+          set +e
+          bash update.bash
+          status=$?
+          if [ "$status" -eq 78 ]; then
+            echo "codex_required=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          exit "$status"
+
       - name: Start Codex proxy
+        if: steps.update_without_codex.outputs.codex_required == 'true'
         uses: openai/codex-action@v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
 
-      - name: Run update script
+      - name: Run update script with Codex
+        if: steps.update_without_codex.outputs.codex_required == 'true'
         run: bash update.bash
