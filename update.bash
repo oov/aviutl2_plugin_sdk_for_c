@@ -41,5 +41,5 @@ fi
 echo "Header changes detected. Launching AI to process updates..."
 
 pushd "$SCRIPT_DIR" > /dev/null
-npx -y @github/copilot --allow-all-paths --allow-all-tools --model gpt-5.4 -p "$(cat UPDATE-PROMPT.md)"
+codex exec --cd "$SCRIPT_DIR" --sandbox danger-full-access --model gpt-5.3-codex - < UPDATE-PROMPT.md
 popd > /dev/null

@@ -18,9 +18,11 @@ jobs:
         with:
           submodules: false
           fetch-depth: 1
-          token: ${{ secrets.COPILOT_SECRET }}
+
+      - name: Start Codex proxy
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Run update script
-        env:
-          GH_TOKEN: ${{ secrets.COPILOT_SECRET }}
         run: bash update.bash
