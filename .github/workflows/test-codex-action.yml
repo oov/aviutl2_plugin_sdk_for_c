@@ -1,0 +1,46 @@
+name: Test Codex Action
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test-codex-action:
+    runs-on: ubuntu-slim
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 1
+
+      - name: Start Codex proxy
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Run Codex commit and push test
+        run: |
+          codex exec --cd "$GITHUB_WORKSPACE" --sandbox danger-full-access --model gpt-5.3-codex - <<'PROMPT'
+            This is a manual GitHub Actions plumbing test for Codex.
+
+            Run the following commands from the repository root. Do not modify
+            any file. Do not commit or push inside the aviutl2_plugin_sdk
+            submodule.
+
+            1. Verify that aviutl2_plugin_sdk/.tools/sdk_last_update.txt exists.
+            2. Verify that the parent repository has no diff.
+            3. Configure the Git author as:
+               - name: github-actions[bot]
+               - email: 41898282+github-actions[bot]@users.noreply.github.com
+            4. In the parent repository, create an empty commit with
+               git commit --allow-empty and this exact message:
+               test Codex GitHub Actions plumbing
+            5. Push the current HEAD back to the branch that triggered this
+               workflow.
+
+            If any step fails, stop and explain the failing command.
+          PROMPT
