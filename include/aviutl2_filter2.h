@@ -32,6 +32,8 @@
 #include <stdint.h>
 
 struct ID3D11Texture2D;
+struct ID3D11BlendState;
+struct ID3D11SamplerState;
 struct aviutl2_edit_section;
 
 /**
@@ -47,7 +49,8 @@ typedef void *aviutl2_object_handle;
  */
 struct aviutl2_filter_item_track {
   /**
-   * Setting type (L"track")
+   * Setting type (L"track2")
+   * Backward compatibility with previous type L"track" is supported
    */
   wchar_t const *type;
 
@@ -77,6 +80,40 @@ struct aviutl2_filter_item_track {
    * Note: Values of 0.0001 or less can also be specified, but will be adjusted according to the min/max range
    */
   double const step;
+
+  /**
+   * Zero value display name
+   * String displayed on the track bar when the value is 0
+   */
+  wchar_t const *zero_display;
+
+  /**
+   * Operation scale factor
+   * Scale factor of track bar operation range relative to the setting value range
+   */
+  double const slider_ratio;
+};
+
+/**
+ * Track bar group filter item
+ * Track group supports only 2 or 3 track items
+ */
+struct aviutl2_filter_item_track_group {
+  /**
+   * Setting type (L"trackgroup")
+   */
+  wchar_t const *type;
+
+  /**
+   * Setting name
+   */
+  wchar_t const *name;
+
+  /**
+   * Track item group
+   * Null-terminated list of pointers to aviutl2_filter_item_track
+   */
+  struct aviutl2_filter_item_track **tracks;
 };
 
 /**
@@ -85,6 +122,27 @@ struct aviutl2_filter_item_track {
 struct aviutl2_filter_item_check {
   /**
    * Setting type (L"check")
+   */
+  wchar_t const *type;
+
+  /**
+   * Setting name
+   */
+  wchar_t const *name;
+
+  /**
+   * Setting value
+   * Updated to current value when filter function is called
+   */
+  bool value;
+};
+
+/**
+ * Check box filter item (per section)
+ */
+struct aviutl2_filter_item_check_section {
+  /**
+   * Setting type (L"checksection")
    */
   wchar_t const *type;
 
@@ -412,6 +470,16 @@ enum aviutl2_sampler_mode {
 };
 
 /**
+ * Output blend mode type (BlendState)
+ */
+enum aviutl2_blend_state_mode {
+  aviutl2_blend_state_mode_copy = 0, /**< Copy output as-is */
+  aviutl2_blend_state_mode_mask = 1, /**< Multiply alpha channel only (RGB values are not used) */
+  aviutl2_blend_state_mode_draw = 2, /**< Alpha blend output */
+  aviutl2_blend_state_mode_add = 3,  /**< Additive blend output */
+};
+
+/**
  * Blend mode type
  */
 enum aviutl2_blend_mode {
@@ -621,15 +689,15 @@ struct aviutl2_filter_proc_video {
   void (*set_image_data)(struct aviutl2_pixel_rgba *buffer, int width, int height);
 
   /**
-   * Get pointer to current object image data (ID3D11Texture2D)
-   * @return Pointer to object image data
+   * Get pointer to current object's D3D image resource (ID3D11Texture2D)
+   * @return Pointer to object's ID3D11Texture2D
    *         Valid until current image is changed (set_image_data) or filter processing ends
    */
   struct ID3D11Texture2D *(*get_image_texture2d)(void);
 
   /**
-   * Get pointer to current framebuffer image data (ID3D11Texture2D)
-   * @return Pointer to framebuffer image data
+   * Get pointer to current framebuffer D3D image resource (ID3D11Texture2D)
+   * @return Pointer to framebuffer ID3D11Texture2D
    *         Valid until filter processing ends
    */
   struct ID3D11Texture2D *(*get_framebuffer_texture2d)(void);
@@ -670,10 +738,12 @@ struct aviutl2_filter_proc_video {
 
   /**
    * Draw the specified image resource to the framebuffer
-   * @param image Image resource name. If NULL, the current object is used.
-   *              "tempbuffer" = virtual buffer
-   *              "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
-   *              "image:xxxx" = image file (xxxx is an image file path). The image is cached in VRAM
+   * @param resource Image resource name
+   *                 "object" = current object (NULL also selects current object)
+   *                 "resource:xxxx" = standard resource (xxxx is an arbitrary name)
+   *                 "tempbuffer" = virtual buffer
+   *                 "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
+   *                 "image:xxxx" = image file (xxxx is an image file path). The image is cached in VRAM
    * @param x Base X coordinate
    * @param y Base Y coordinate
    * @param z Base Z coordinate
@@ -686,7 +756,7 @@ struct aviutl2_filter_proc_video {
    * @param alpha Opacity (0.0 to 1.0 / 0.0 = transparent / 1.0 = opaque)
    * @return false on failure (for example, if the image resource name is invalid)
    */
-  bool (*draw_image)(wchar_t const *image,
+  bool (*draw_image)(wchar_t const *resource,
                      float x,
                      float y,
                      float z,
@@ -703,18 +773,20 @@ struct aviutl2_filter_proc_video {
    * @param vertex_type Vertex list type
    * @param vertex_list Pointer to the vertex data list (pointer to a buffer of the specified vertex type)
    * @param vertex_num Number of vertices in the list
-   * @param image Texture image resource name, only when needed. If NULL, the current object is used.
-   *              "tempbuffer" = virtual buffer
-   *              "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
-   *              "image:xxxx" = image file (xxxx is an image file path). The image is cached in VRAM
+   * @param resource Texture image resource name (used only when textured)
+   *                 "object" = current object (NULL also selects current object)
+   *                 "resource:xxxx" = standard resource (xxxx is an arbitrary name)
+   *                 "tempbuffer" = virtual buffer
+   *                 "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
+   *                 "image:xxxx" = image file (xxxx is an image file path). The image is cached in VRAM
    * @return false on failure (for example, if the vertex count is invalid)
    */
-  bool (*draw_poly)(enum aviutl2_vertex_type vertex_type, void *vertex_list, int vertex_num, wchar_t const *image);
+  bool (*draw_poly)(enum aviutl2_vertex_type vertex_type, void *vertex_list, int vertex_num, wchar_t const *resource);
 
   /**
    * Set the default anchor frame
-   * Usually this is set automatically
-   * Use this when rendering the object yourself with draw_image() or similar and returning false from func_proc_video()
+   * Automatically set when func_proc_video() returns true
+   * Use this when all object drawing is handled manually with draw_image() and related functions
    * @param width Object width (specify 0 to use a fixed-size anchor frame)
    * @param height Object height (specify 0 to use a fixed-size anchor frame)
    */
@@ -756,14 +828,206 @@ struct aviutl2_filter_proc_video {
    * Create an image resource (writes data to VRAM)
    * Image resources can be used for draw_image() and similar drawing
    * If an existing image resource name is specified, the resource is updated
-   * @param image Image resource name. If NULL, the current object is used.
-   *              "tempbuffer" = virtual buffer
-   *              "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
+   * @param resource Image resource name to create
+   *                 "object" = current object (NULL also selects current object)
+   *                 "resource:xxxx" = standard resource (xxxx is an arbitrary name). Released after filter processing
+   *                 "tempbuffer" = virtual buffer (internally the same implementation as cache buffer)
+   *                 "cache:xxxx" = cache buffer (xxxx is an arbitrary name). Shared with rendering process
    * @param buffer Pointer to image data (if NULL, the image size is changed with uninitialized data)
    * @param width Image width
    * @param height Image height
    */
-  void (*create_image_resource)(wchar_t const *image, struct aviutl2_pixel_rgba *buffer, int width, int height);
+  void (*create_image_resource)(wchar_t const *resource, struct aviutl2_pixel_rgba *buffer, int width, int height);
+
+  /**
+   * Get pointer to D3D image resource for the specified image resource (ID3D11Texture2D)
+   * @param resource Image resource name
+   *                 "object" = current object (NULL also selects current object)
+   *                 "resource:xxxx" = standard resource (xxxx is an arbitrary name)
+   *                 "tempbuffer" = virtual buffer
+   *                 "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
+   *                 "image:xxxx" = image file (xxxx is an image file path). The image is cached in VRAM
+   *                 "random" = random buffer (256x256 random values in range 0.0 to 1.0, DXGI_FORMAT_R32_FLOAT/r only)
+   * @return Pointer to ID3D11Texture2D for the image resource (NULL if resource is not found)
+   *         Valid until the image resource changes or filter processing ends
+   */
+  struct ID3D11Texture2D *(*get_image_resource_texture2d)(wchar_t const *resource);
+
+  /**
+   * Copy image resource (copied in VRAM)
+   * @param dst_resource Destination image resource name
+   *                     If an existing image resource name is specified, the resource is updated
+   *                     "object" = current object (NULL also selects current object)
+   *                     "resource:xxxx" = standard resource (xxxx is an arbitrary name). Released after filter processing
+   *                     "tempbuffer" = virtual buffer (internally the same implementation as cache buffer)
+   *                     "cache:xxxx" = cache buffer (xxxx is an arbitrary name). Shared with rendering process
+   * @param src_resource Source image resource name
+   *                     "object" = current object (NULL also selects current object)
+   *                     "resource:xxxx" = standard resource (xxxx is an arbitrary name)
+   *                     "framebuffer" = framebuffer
+   *                     "tempbuffer" = virtual buffer
+   *                     "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
+   *                     "image:xxxx" = image file (xxxx is an image file path). The image is cached in VRAM
+   *                     "random" = random buffer (256x256 random values in range 0.0 to 1.0, DXGI_FORMAT_R32_FLOAT/r only)
+   * @return false on failure (for example, if an image resource name is invalid)
+   */
+  bool (*copy_image_resource)(wchar_t const *dst_resource, wchar_t const *src_resource);
+
+  /**
+   * Clear image resource directly in VRAM
+   * @param resource Image resource name to clear
+   *                 "object" = current object (NULL also selects current object)
+   *                 "resource:xxxx" = standard resource (xxxx is an arbitrary name)
+   *                 "tempbuffer" = virtual buffer
+   *                 "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
+   * @param color Clear color
+   * @return false on failure (for example, if an image resource name is invalid)
+   */
+  bool (*clear_image_resource)(wchar_t const *resource, struct aviutl2_pixel_rgba color);
+
+  /**
+   * Draw specified image resource to destination image resource
+   * @param dst_resource Destination image resource name
+   *                     "object" = current object (NULL also selects current object)
+   *                     "resource:xxxx" = standard resource (xxxx is an arbitrary name)
+   *                     "tempbuffer" = virtual buffer
+   *                     "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
+   * @param src_resource Source image resource name
+   *                     "object" = current object (NULL also selects current object)
+   *                     "resource:xxxx" = standard resource (xxxx is an arbitrary name)
+   *                     "tempbuffer" = virtual buffer
+   *                     "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
+   *                     "image:xxxx" = image file (xxxx is an image file path). The image is cached in VRAM
+   * @param x Base X coordinate
+   * @param y Base Y coordinate
+   * @param z Base Z coordinate
+   * @param rx Rotation angle around X (360.0 is one full rotation)
+   * @param ry Rotation angle around Y (360.0 is one full rotation)
+   * @param rz Rotation angle around Z (360.0 is one full rotation)
+   * @param sx Scale on X (1.0 = normal size)
+   * @param sy Scale on Y (1.0 = normal size)
+   * @param sz Scale on Z (1.0 = normal size)
+   * @param alpha Opacity (0.0 to 1.0 / 0.0 = transparent / 1.0 = opaque)
+   * @return false on failure (for example, if an image resource name is invalid)
+   */
+  bool (*draw_image_to_resource)(wchar_t const *dst_resource,
+                                 wchar_t const *src_resource,
+                                 float x,
+                                 float y,
+                                 float z,
+                                 float rx,
+                                 float ry,
+                                 float rz,
+                                 float sx,
+                                 float sy,
+                                 float sz,
+                                 float alpha);
+
+  /**
+   * Draw polygon with specified vertex list to destination image resource
+   * @param dst_resource Destination image resource name
+   *                     "object" = current object (NULL also selects current object)
+   *                     "resource:xxxx" = standard resource (xxxx is an arbitrary name)
+   *                     "tempbuffer" = virtual buffer
+   *                     "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
+   * @param vertex_type Vertex list type
+   * @param vertex_list Pointer to the vertex data list (pointer to a buffer of the specified vertex type)
+   * @param vertex_num Number of vertices in the list
+   * @param src_resource Texture image resource name (used only when textured)
+   *                     "object" = current object (NULL also selects current object)
+   *                     "resource:xxxx" = standard resource (xxxx is an arbitrary name)
+   *                     "tempbuffer" = virtual buffer
+   *                     "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
+   *                     "image:xxxx" = image file (xxxx is an image file path). The image is cached in VRAM
+   * @return false on failure (for example, if vertex count is invalid)
+   */
+  bool (*draw_poly_to_resource)(wchar_t const *dst_resource,
+                                enum aviutl2_vertex_type vertex_type,
+                                void *vertex_list,
+                                int vertex_num,
+                                wchar_t const *src_resource);
+
+  /**
+   * Execute pixel shader
+   * @param cso_file Compiled pixel shader binary file name (file name only)
+   *                 Loaded from the same folder as the plugin and cached
+   *                 Pixel Shader 5.0 compiled binaries are supported
+   * @param target Output target image resource name
+   *               Set as Direct3D render target
+   *               "object" = current object (NULL also selects current object)
+   *               "resource:xxxx" = standard resource (xxxx is an arbitrary name)
+   *               "framebuffer" = framebuffer
+   *               "tempbuffer" = virtual buffer
+   *               "cache:xxxx" = cache buffer (xxxx is an arbitrary name)
+   * @param resource_list Pointer to list of referenced image resource names (no binding when NULL)
+   *                      Set to Direct3D shader resources (t0-)
+   *                      Resource names that can be referenced:
+   *                      "object", "resource:xxxx", "tempbuffer", "cache:xxxx", "image:xxxx", "random"
+   *                      Cannot use the same resource as render target
+   * @param resource_num Number of referenced image resources
+   * @param constant Pointer to constant buffer data (no constant buffer when NULL)
+   * @param constant_size Constant buffer size
+   * @param blend_state Direct3D BlendState (NULL copies output as-is)
+   * @param sampler_state Direct3D SamplerState(s0) (no sampler state when NULL)
+   * @return false on failure (for example, if an image resource name is invalid)
+   */
+  bool (*exec_pixelshader)(wchar_t const *cso_file,
+                           wchar_t const *target,
+                           wchar_t const **resource_list,
+                           int resource_num,
+                           void *constant,
+                           int constant_size,
+                           struct ID3D11BlendState *blend_state,
+                           struct ID3D11SamplerState *sampler_state);
+
+  /**
+   * Execute compute shader
+   * @param cso_file Compiled compute shader binary file name (file name only)
+   *                 Loaded from the same folder as the plugin and cached
+   *                 Compute Shader 5.0 compiled binaries are supported
+   * @param target_list Pointer to list of read/write image resource names (Direct3D unordered access resources u0-)
+   *                    Resource names that can be specified:
+   *                    "object", "resource:xxxx", "framebuffer", "tempbuffer", "cache:xxxx"
+   * @param target_num Number of read/write image resources
+   * @param resource_list Pointer to list of referenced image resource names (no binding when NULL)
+   *                      Set to Direct3D shader resources (t0-)
+   *                      Resource names that can be referenced:
+   *                      "object", "resource:xxxx", "tempbuffer", "cache:xxxx", "image:xxxx", "random"
+   *                      Cannot use the same resource as unordered access target
+   * @param resource_num Number of referenced image resources
+   * @param constant Pointer to constant buffer data (no constant buffer when NULL)
+   * @param constant_size Constant buffer size
+   * @param count_x Thread group count on X axis
+   * @param count_y Thread group count on Y axis
+   * @param count_z Thread group count on Z axis
+   * @param sampler_state Direct3D SamplerState(s0) (no sampler state when NULL)
+   * @return false on failure (for example, if an image resource name is invalid)
+   */
+  bool (*exec_computeshader)(wchar_t const *cso_file,
+                             wchar_t const **target_list,
+                             int target_num,
+                             wchar_t const **resource_list,
+                             int resource_num,
+                             void *constant,
+                             int constant_size,
+                             int count_x,
+                             int count_y,
+                             int count_z,
+                             struct ID3D11SamplerState *sampler_state);
+
+  /**
+   * Get predefined D3D output blend resource pointer (ID3D11BlendState)
+   * @param blend Output blend mode type
+   * @return Pointer to ID3D11BlendState (NULL if unsupported type)
+   */
+  struct ID3D11BlendState *(*get_blend_state)(enum aviutl2_blend_state_mode blend);
+
+  /**
+   * Get predefined D3D sampler resource pointer (ID3D11SamplerState)
+   * @param sampler Sampler type
+   * @return Pointer to ID3D11SamplerState (NULL if unsupported type)
+   */
+  struct ID3D11SamplerState *(*get_sampler_state)(enum aviutl2_sampler_mode sampler);
 };
 
 /**
@@ -887,7 +1151,7 @@ struct aviutl2_filter_plugin_table {
    * Video filter function pointer
    * Called only if FLAG_VIDEO is set
    * @param video Pointer to video filter processing parameters
-   * @return true if processing succeeded, false otherwise
+   * @return Returning false aborts subsequent filter and output processing
    */
   bool (*func_proc_video)(struct aviutl2_filter_proc_video *video);
 
@@ -895,7 +1159,7 @@ struct aviutl2_filter_plugin_table {
    * Audio filter function pointer
    * Called only if FLAG_AUDIO is set
    * @param audio Pointer to audio filter processing parameters
-   * @return true if processing succeeded, false otherwise
+   * @return Returning false aborts subsequent filter and output processing
    */
   bool (*func_proc_audio)(struct aviutl2_filter_proc_audio *audio);
 };

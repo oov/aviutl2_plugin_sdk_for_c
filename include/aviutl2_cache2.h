@@ -6,6 +6,7 @@
 // LICENSE: The MIT License / Copyright (c) 2025 Kenkun
 
 // Any plugin can export the following function to enable cache support:
+// Note: In input plugins, the image-file cache acquisition function is deprecated.
 //
 // Cache initialization function
 //   void InitializeCache(struct aviutl2_cache_handle *cache)
