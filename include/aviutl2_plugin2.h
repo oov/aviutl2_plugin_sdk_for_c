@@ -45,6 +45,7 @@ struct aviutl2_filter_plugin_table;
 struct aviutl2_script_module_table;
 struct aviutl2_edit_handle;
 struct aviutl2_project_file;
+struct aviutl2_pixel_rgba;
 
 /**
  * Common plugin structure
@@ -556,6 +557,53 @@ struct aviutl2_edit_handle {
   bool (*enum_effect_item)(wchar_t const *effect,
                            void *param,
                            void (*func_proc_enum_effect_item)(void *param, wchar_t const *name, int type));
+
+  /**
+   * Render the video of the current scene
+   * This function only enqueues a rendering task and returns immediately
+   * The callback function is called from a rendering thread after rendering is completed
+   * @param frame Frame to render
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_rendering_video Callback function called on completion
+   *        buffer: Pointer to rendered image data (PIXEL_RGBA format)
+   *        width,height: Rendered image size
+   *        pitch: Number of bytes per row in rendered image data
+   * @return true if rendering request succeeds (fails during output and similar states)
+   */
+  bool (*rendering_scene_video)(int frame,
+                                void *param,
+                                void (*func_proc_rendering_video)(void *param,
+                                                                   int frame,
+                                                                   void const *buffer,
+                                                                   int width,
+                                                                   int height,
+                                                                   int pitch));
+
+  /**
+   * Render the audio of the current scene
+   * This function only enqueues a rendering task and returns immediately
+   * The callback function is called from a rendering thread after rendering is completed
+   * @param frame Frame to render
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_rendering_audio Callback function called on completion
+   *        buffer0: Pointer to rendered audio data (left channel, PCM(float) 32-bit format)
+   *        buffer1: Pointer to rendered audio data (right channel, PCM(float) 32-bit format)
+   *        sample_num: Number of rendered audio samples
+   * @return true if rendering request succeeds (fails during output and similar states)
+   */
+  bool (*rendering_scene_audio)(int frame,
+                                void *param,
+                                void (*func_proc_rendering_audio)(void *param,
+                                                                   int frame,
+                                                                   float const *buffer0,
+                                                                   float const *buffer1,
+                                                                   int sample_num));
+
+  /**
+   * Wait until all rendering tasks in progress are completed
+   * Note: Calling this while holding a read lock or edit lock may cause deadlock
+   */
+  void (*wait_rendering_task)(void);
 };
 
 /**

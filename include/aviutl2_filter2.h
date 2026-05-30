@@ -480,6 +480,28 @@ enum aviutl2_blend_state_mode {
 };
 
 /**
+ * Input image pixel format type
+ */
+enum aviutl2_input_pixel_format {
+  aviutl2_input_pixel_format_rgba = 28, /**< DXGI_FORMAT_R8G8B8A8_UNORM (PIXEL_RGBA) */
+  aviutl2_input_pixel_format_bgra = 87, /**< DXGI_FORMAT_B8G8R8A8_UNORM */
+  aviutl2_input_pixel_format_bgr = 88,  /**< DXGI_FORMAT_B8G8R8X8_UNORM */
+  aviutl2_input_pixel_format_pa64 = 11, /**< DXGI_FORMAT_R16G16B16A16_UNORM */
+  aviutl2_input_pixel_format_hf64 = 10, /**< DXGI_FORMAT_R16G16B16A16_FLOAT */
+  aviutl2_input_pixel_format_yuy2 = 107, /**< DXGI_FORMAT_YUY2 */
+  aviutl2_input_pixel_format_yc48 = 13, /**< DXGI_FORMAT_R16G16B16A16_SNORM (compatibility) */
+};
+
+/**
+ * Output image pixel format type
+ */
+enum aviutl2_output_pixel_format {
+  aviutl2_output_pixel_format_rgba = 28, /**< DXGI_FORMAT_R8G8B8A8_UNORM (PIXEL_RGBA) */
+  aviutl2_output_pixel_format_pa64 = 11, /**< DXGI_FORMAT_R16G16B16A16_UNORM */
+  aviutl2_output_pixel_format_hf64 = 10, /**< DXGI_FORMAT_R16G16B16A16_FLOAT */
+};
+
+/**
  * Blend mode type
  */
 enum aviutl2_blend_mode {
@@ -675,18 +697,18 @@ struct aviutl2_filter_proc_video {
   struct aviutl2_object_info const *object;
 
   /**
-   * Get current object image data (from VRAM)
+   * Get current object image data in PIXEL_RGBA format (from VRAM)
    * @param buffer Pointer to image data storage where the image data will be stored
    */
   void (*get_image_data)(struct aviutl2_pixel_rgba *buffer);
 
   /**
-   * Set current object image data (write to VRAM)
+   * Set current object image data in PIXEL_RGBA format (write to VRAM)
    * @param buffer Pointer to image data to write to VRAM (if nullptr, image size is changed with uninitialized data)
    * @param width Image width
    * @param height Image height
    */
-  void (*set_image_data)(struct aviutl2_pixel_rgba *buffer, int width, int height);
+  void (*set_image_data)(struct aviutl2_pixel_rgba const *buffer, int width, int height);
 
   /**
    * Get pointer to current object's D3D image resource (ID3D11Texture2D)
@@ -781,7 +803,7 @@ struct aviutl2_filter_proc_video {
    *                 "image:xxxx" = image file (xxxx is an image file path). The image is cached in VRAM
    * @return false on failure (for example, if the vertex count is invalid)
    */
-  bool (*draw_poly)(enum aviutl2_vertex_type vertex_type, void *vertex_list, int vertex_num, wchar_t const *resource);
+  bool (*draw_poly)(enum aviutl2_vertex_type vertex_type, void const *vertex_list, int vertex_num, wchar_t const *resource);
 
   /**
    * Set the default anchor frame
@@ -833,11 +855,11 @@ struct aviutl2_filter_proc_video {
    *                 "resource:xxxx" = standard resource (xxxx is an arbitrary name). Released after filter processing
    *                 "tempbuffer" = virtual buffer (internally the same implementation as cache buffer)
    *                 "cache:xxxx" = cache buffer (xxxx is an arbitrary name). Shared with rendering process
-   * @param buffer Pointer to image data (if NULL, the image size is changed with uninitialized data)
+   * @param buffer Pointer to image data (PIXEL_RGBA format). If NULL, the resource is created without initial data
    * @param width Image width
    * @param height Image height
    */
-  void (*create_image_resource)(wchar_t const *resource, struct aviutl2_pixel_rgba *buffer, int width, int height);
+  void (*create_image_resource)(wchar_t const *resource, struct aviutl2_pixel_rgba const *buffer, int width, int height);
 
   /**
    * Get pointer to D3D image resource for the specified image resource (ID3D11Texture2D)
@@ -854,7 +876,7 @@ struct aviutl2_filter_proc_video {
   struct ID3D11Texture2D *(*get_image_resource_texture2d)(wchar_t const *resource);
 
   /**
-   * Copy image resource (copied in VRAM)
+   * Copy image resource
    * @param dst_resource Destination image resource name
    *                     If an existing image resource name is specified, the resource is updated
    *                     "object" = current object (NULL also selects current object)
@@ -874,7 +896,7 @@ struct aviutl2_filter_proc_video {
   bool (*copy_image_resource)(wchar_t const *dst_resource, wchar_t const *src_resource);
 
   /**
-   * Clear image resource directly in VRAM
+   * Clear image resource
    * @param resource Image resource name to clear
    *                 "object" = current object (NULL also selects current object)
    *                 "resource:xxxx" = standard resource (xxxx is an arbitrary name)
@@ -943,7 +965,7 @@ struct aviutl2_filter_proc_video {
    */
   bool (*draw_poly_to_resource)(wchar_t const *dst_resource,
                                 enum aviutl2_vertex_type vertex_type,
-                                void *vertex_list,
+                                void const *vertex_list,
                                 int vertex_num,
                                 wchar_t const *src_resource);
 
@@ -971,14 +993,14 @@ struct aviutl2_filter_proc_video {
    * @param sampler_state Direct3D SamplerState(s0) (no sampler state when NULL)
    * @return false on failure (for example, if an image resource name is invalid)
    */
-  bool (*exec_pixelshader)(wchar_t const *cso_file,
-                           wchar_t const *target,
-                           wchar_t const **resource_list,
-                           int resource_num,
-                           void *constant,
-                           int constant_size,
-                           struct ID3D11BlendState *blend_state,
-                           struct ID3D11SamplerState *sampler_state);
+  bool (*exec_pixelshader_file)(wchar_t const *cso_file,
+                                wchar_t const *target,
+                                wchar_t const **resource_list,
+                                int resource_num,
+                                void *constant,
+                                int constant_size,
+                                struct ID3D11BlendState *blend_state,
+                                struct ID3D11SamplerState *sampler_state);
 
   /**
    * Execute compute shader
@@ -1003,17 +1025,17 @@ struct aviutl2_filter_proc_video {
    * @param sampler_state Direct3D SamplerState(s0) (no sampler state when NULL)
    * @return false on failure (for example, if an image resource name is invalid)
    */
-  bool (*exec_computeshader)(wchar_t const *cso_file,
-                             wchar_t const **target_list,
-                             int target_num,
-                             wchar_t const **resource_list,
-                             int resource_num,
-                             void *constant,
-                             int constant_size,
-                             int count_x,
-                             int count_y,
-                             int count_z,
-                             struct ID3D11SamplerState *sampler_state);
+  bool (*exec_computeshader_file)(wchar_t const *cso_file,
+                                  wchar_t const **target_list,
+                                  int target_num,
+                                  wchar_t const **resource_list,
+                                  int resource_num,
+                                  void *constant,
+                                  int constant_size,
+                                  int count_x,
+                                  int count_y,
+                                  int count_z,
+                                  struct ID3D11SamplerState *sampler_state);
 
   /**
    * Get predefined D3D output blend resource pointer (ID3D11BlendState)
@@ -1028,6 +1050,102 @@ struct aviutl2_filter_proc_video {
    * @return Pointer to ID3D11SamplerState (NULL if unsupported type)
    */
   struct ID3D11SamplerState *(*get_sampler_state)(enum aviutl2_sampler_mode sampler);
+
+  /**
+   * Execute pixel shader
+   * @param data Pointer to compiled pixel shader data (for example, data embedded from a header file)
+   * @param data_size Size of compiled pixel shader data
+   * @param target Output target image resource name
+   * @param resource_list Pointer to list of referenced image resource names (no binding when NULL)
+   * @param resource_num Number of referenced image resources
+   * @param constant Pointer to constant buffer data (no constant buffer when NULL)
+   * @param constant_size Constant buffer size
+   * @param blend_state Direct3D BlendState (NULL copies output as-is)
+   * @param sampler_state Direct3D SamplerState(s0) (no sampler state when NULL)
+   * @return false on failure (for example, if an image resource name is invalid)
+   */
+  bool (*exec_pixelshader_data)(uint8_t const *data,
+                                int data_size,
+                                wchar_t const *target,
+                                wchar_t const **resource_list,
+                                int resource_num,
+                                void *constant,
+                                int constant_size,
+                                struct ID3D11BlendState *blend_state,
+                                struct ID3D11SamplerState *sampler_state);
+
+  /**
+   * Execute compute shader
+   * @param data Pointer to compiled compute shader data (for example, data embedded from a header file)
+   * @param data_size Size of compiled compute shader data
+   * @param target_list Pointer to list of read/write image resource names (Direct3D unordered access resources u0-)
+   * @param target_num Number of read/write image resources
+   * @param resource_list Pointer to list of referenced image resource names (no binding when NULL)
+   * @param resource_num Number of referenced image resources
+   * @param constant Pointer to constant buffer data (no constant buffer when NULL)
+   * @param constant_size Constant buffer size
+   * @param count_x Thread group count on X axis
+   * @param count_y Thread group count on Y axis
+   * @param count_z Thread group count on Z axis
+   * @param sampler_state Direct3D SamplerState(s0) (no sampler state when NULL)
+   * @return false on failure (for example, if an image resource name is invalid)
+   */
+  bool (*exec_computeshader_data)(uint8_t const *data,
+                                  int data_size,
+                                  wchar_t const **target_list,
+                                  int target_num,
+                                  wchar_t const **resource_list,
+                                  int resource_num,
+                                  void *constant,
+                                  int constant_size,
+                                  int count_x,
+                                  int count_y,
+                                  int count_z,
+                                  struct ID3D11SamplerState *sampler_state);
+
+  /**
+   * Get the size of the specified image resource
+   * @param resource Image resource name
+   * @param width Pointer to storage for image width
+   * @param height Pointer to storage for image height
+   * @return false on failure (for example, if an image resource name is invalid)
+   */
+  bool (*get_image_resource_size)(wchar_t const *resource, int *width, int *height);
+
+  /**
+   * Get image data in the specified format from an image resource (from VRAM)
+   * @param resource Image resource name
+   * @param buffer Pointer to image data destination
+   * @param width Destination image width
+   * @param height Destination image height
+   * @param pitch Number of bytes per row in destination image data
+   * @param format Pixel format for output image data
+   * @return false on failure (for example, if an image resource name is invalid)
+   */
+  bool (*get_image_resource_data)(wchar_t const *resource,
+                                  void *buffer,
+                                  int width,
+                                  int height,
+                                  int pitch,
+                                  enum aviutl2_output_pixel_format format);
+
+  /**
+   * Set image data in the specified format to an image resource (write to VRAM)
+   * If a non-existing image resource name is specified, a new resource is created
+   * @param resource Image resource name to create/update
+   * @param buffer Pointer to image data
+   * @param width Image width
+   * @param height Image height
+   * @param pitch Number of bytes per row in image data
+   * @param format Pixel format of input image data
+   * @return false on failure (for example, if an image resource name is invalid)
+   */
+  bool (*set_image_resource_data)(wchar_t const *resource,
+                                  void const *buffer,
+                                  int width,
+                                  int height,
+                                  int pitch,
+                                  enum aviutl2_input_pixel_format format);
 };
 
 /**
@@ -1056,7 +1174,7 @@ struct aviutl2_filter_proc_audio {
    * @param buffer Pointer to audio data to write (audio data is PCM float 32-bit)
    * @param channel Audio channel number (0 = left/mono, 1 = right)
    */
-  void (*set_sample_data)(float *buffer, int channel);
+  void (*set_sample_data)(float const *buffer, int channel);
 
   /**
    * Edit section interface

@@ -14,6 +14,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 struct aviutl2_pixel_rgba;
 
@@ -47,6 +48,7 @@ struct aviutl2_cache_image {
 
   /**
    * Pointer to image cache data (NULL if acquisition failed)
+   * Image data is PIXEL_RGBA
    */
   struct aviutl2_pixel_rgba *buffer;
 
@@ -81,11 +83,13 @@ struct aviutl2_cache_audio {
 
   /**
    * Pointer to audio cache data (left channel) (NULL if acquisition failed)
+   * Audio data is PCM(float) 32-bit
    */
   float *buffer0;
 
   /**
    * Pointer to audio cache data (right channel) (NULL if acquisition failed)
+   * Audio data is PCM(float) 32-bit
    */
   float *buffer1;
 
@@ -140,6 +144,78 @@ static inline void aviutl2_cache_audio_release(struct aviutl2_cache_audio *audio
 //--------------------------------
 
 /**
+ * Media file image cache data structure
+ */
+struct aviutl2_cache_file_image {
+  struct aviutl2_cache_reference reference;
+
+  /**
+   * Pointer to image cache data (NULL if acquisition failed)
+   * Image data format is one of INPUT_PIXEL_FORMAT values
+   */
+  void const *buffer;
+
+  /**
+   * Image cache size
+   */
+  int width, height;
+
+  /**
+   * Number of bytes per row in image cache data
+   */
+  int pitch;
+
+  /**
+   * Pixel format of image cache data
+   * Values correspond to enum aviutl2_input_pixel_format in aviutl2_filter2.h
+   */
+  int format;
+};
+
+/**
+ * Check whether media file image cache data was acquired successfully
+ * @param image Media file image cache data
+ * @return false if the data is unavailable
+ */
+static inline bool aviutl2_cache_file_image_available(struct aviutl2_cache_file_image const *image) {
+  return image && image->buffer;
+}
+
+/**
+ * Release media file image cache data
+ * @param image Media file image cache data
+ */
+static inline void aviutl2_cache_file_image_release(struct aviutl2_cache_file_image *image) {
+  aviutl2_cache_reference_release(&image->reference);
+}
+
+//--------------------------------
+
+/**
+ * Video information structure
+ */
+struct aviutl2_video_info {
+  double total_time; /**< Total duration */
+  int frame_num;     /**< Total number of frames */
+  int track_num;     /**< Number of tracks */
+  int width, height; /**< Resolution */
+  int rate, scale;   /**< Frame rate */
+};
+
+/**
+ * Audio information structure
+ */
+struct aviutl2_audio_info {
+  double total_time;  /**< Total duration */
+  int64_t sample_num; /**< Total number of samples */
+  int track_num;      /**< Number of tracks */
+  int rate;           /**< Sampling rate */
+  int channel;        /**< Number of channels */
+};
+
+//--------------------------------
+
+/**
  * Cache handle
  * Various cache data can be created in the application's shared cache area
  * Note: Unlike script cache buffers (cache:xxxx), these are allocated in main memory
@@ -189,9 +265,68 @@ struct aviutl2_cache_handle {
                                                    int channel_num);
 
   /**
-   * Get image data from an image file through the cache
-   * @param file Path to the image file
-   * @return Image cache data. Use aviutl2_cache_image_available() to check for acquisition failure
+   * Deprecated because this is replaced by the new function
    */
-  struct aviutl2_cache_image (*get_image_file_cache)(wchar_t const *file);
+  struct aviutl2_cache_image (*deprecated_get_image_file_cache)(wchar_t const *file);
+
+  /**
+   * Get media file video information
+   * @param file Path to media file
+   * @param info Pointer to video information storage
+   * @param info_size Size of video information storage. If different from VIDEO_INFO, only that size is retrieved
+   * @return true if obtained
+   */
+  bool (*get_video_file_info)(wchar_t const *file, struct aviutl2_video_info *info, int info_size);
+
+  /**
+   * Get media file audio information
+   * @param file Path to media file
+   * @param info Pointer to audio information storage
+   * @param info_size Size of audio information storage. If different from AUDIO_INFO, only that size is retrieved
+   * @return true if obtained
+   */
+  bool (*get_audio_file_info)(wchar_t const *file, struct aviutl2_audio_info *info, int info_size);
+
+  /**
+   * Get image data from an image file through the cache
+   * @param file Path to image file
+   * @return Image cache data. Use aviutl2_cache_file_image_available() to check for acquisition failure
+   */
+  struct aviutl2_cache_file_image (*get_image_file_cache)(wchar_t const *file);
+
+  /**
+   * Get image data from a media file through the cache
+   * @param file Path to media file
+   * @param track Track number
+   * @param frame Frame number to retrieve
+   * @return Image cache data. Use aviutl2_cache_file_image_available() to check for acquisition failure
+   */
+  struct aviutl2_cache_file_image (*get_video_file_cache)(wchar_t const *file, int track, int frame);
+
+  /**
+   * Get image data from a media file through the cache
+   * @param file Path to media file
+   * @param track Video track number
+   * @param time Time of frame to retrieve
+   * @return Image cache data. Use aviutl2_cache_file_image_available() to check for acquisition failure
+   */
+  struct aviutl2_cache_file_image (*get_video_file_cache_by_time)(wchar_t const *file, int track, double time);
+
+  /**
+   * Get audio data from a media file through the cache
+   * Audio format is PCM(float) 32-bit 2ch
+   * @param file Path to media file
+   * @param track Audio track number
+   * @param sample_index Sample position to retrieve
+   * @param sample_num Number of samples to retrieve
+   * @param buffer0 Destination buffer pointer for left channel samples
+   * @param buffer1 Destination buffer pointer for right channel samples
+   * @return Number of samples actually retrieved
+   */
+  int (*get_audio_file_data)(wchar_t const *file,
+                             int track,
+                             int64_t sample_index,
+                             int sample_num,
+                             float *buffer0,
+                             float *buffer1);
 };
