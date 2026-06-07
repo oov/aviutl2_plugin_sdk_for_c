@@ -46,6 +46,7 @@ struct aviutl2_script_module_table;
 struct aviutl2_edit_handle;
 struct aviutl2_project_file;
 struct aviutl2_pixel_rgba;
+struct IDWriteFontCollection;
 
 /**
  * Common plugin structure
@@ -107,6 +108,19 @@ struct aviutl2_module_info {
   int type;                    /**< Module type (aviutl2_module_type_*) */
   wchar_t const *name;         /**< Module name */
   wchar_t const *information;  /**< Module information */
+};
+
+/**
+ * Track bar information
+ */
+struct aviutl2_track_info {
+  wchar_t const *mode; /**< Name of track bar movement mode (NULL if no movement) */
+  double *param;       /**< Pointer to array of track bar parameter values (NULL if no parameter values) */
+  int param_num;       /**< Number of track bar parameter values */
+  bool accelerate;     /**< Whether acceleration is enabled */
+  bool decelerate;     /**< Whether deceleration is enabled */
+  bool twopoint;       /**< Whether midpoint ignore is enabled */
+  bool timecontrol;    /**< Whether time control is enabled */
 };
 
 //--------------------------------
@@ -461,6 +475,60 @@ struct aviutl2_edit_section {
    * @return Section number (-1 if nothing is selected)
    */
   int (*get_focus_object_section)(void);
+
+  /**
+   * Get the start frame number of an object section
+   * @param object Object handle
+   * @param section Section number
+   * @return Start frame number of section (-1 if not available)
+   */
+  int (*get_object_section_frame)(aviutl2_object_handle object, int section);
+
+  /**
+   * Get the value of an object's track bar item at the specified frame position
+   * @param object Object handle
+   * @param effect Target effect name (effect.name value in alias file)
+   *               If there are multiple effects with the same name, you can specify an index with ":n" suffix
+   *               (n is a zero-based index)
+   * @param item Target track bar item name (key name in alias file)
+   * @param frame Target frame number to retrieve (fractional part can specify an in-between frame position)
+   * @param value Pointer to storage for the track bar item value
+   * @return true if value was obtained (fails if target is not found)
+   */
+  bool (*get_object_track_value)(
+      aviutl2_object_handle object, wchar_t const *effect, wchar_t const *item, double frame, double *value);
+
+  /**
+   * Get the value of an object's check box item (including per-section check boxes) at the specified frame position
+   * @param object Object handle
+   * @param effect Target effect name (effect.name value in alias file)
+   *               If there are multiple effects with the same name, you can specify an index with ":n" suffix
+   *               (n is a zero-based index)
+   * @param item Target check box item name (key name in alias file)
+   * @param frame Target frame number to retrieve (used for per-section check boxes)
+   * @param value Pointer to storage for the check box item value
+   * @return true if value was obtained (fails if target is not found)
+   */
+  bool (*get_object_check_value)(
+      aviutl2_object_handle object, wchar_t const *effect, wchar_t const *item, int frame, bool *value);
+
+  /**
+   * Get information about an object's track bar item
+   * @param object Object handle
+   * @param effect Target effect name (effect.name value in alias file)
+   *               If there are multiple effects with the same name, you can specify an index with ":n" suffix
+   *               (n is a zero-based index)
+   * @param item Target track bar item name (key name in alias file)
+   * @param info Pointer to storage for track bar information
+   * @param info_size Size of track bar information storage (if different from aviutl2_track_info, only info_size
+   *                  bytes are obtained)
+   * @return true if info was obtained (fails if target is not found)
+   */
+  bool (*get_object_track_info)(aviutl2_object_handle object,
+                                wchar_t const *effect,
+                                wchar_t const *item,
+                                struct aviutl2_track_info *info,
+                                int info_size);
 };
 
 /**
@@ -926,4 +994,11 @@ struct aviutl2_host_app_table {
    * @param module_name Module name
    */
   void (*register_script_module_name)(struct aviutl2_script_module_table *script_module_table, wchar_t const *module_name);
+
+  /**
+   * Register a font collection
+   * @param collection Font collection (pointer to IDWriteFontCollection)
+   *                   A collection created from DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED) is likely usable
+   */
+  void (*register_font_collection)(struct IDWriteFontCollection *collection);
 };
