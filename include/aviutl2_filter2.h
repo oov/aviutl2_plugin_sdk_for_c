@@ -142,7 +142,8 @@ struct aviutl2_filter_item_check {
  */
 struct aviutl2_filter_item_check_section {
   /**
-   * Setting type (L"checksection")
+   * Setting type (L"checksection2")
+   * Backward compatibility with previous type L"checksection" is supported
    */
   wchar_t const *type;
 
@@ -156,6 +157,11 @@ struct aviutl2_filter_item_check_section {
    * Updated to current value when filter function is called
    */
   bool value;
+
+  /**
+   * Initial value of per-section setting
+   */
+  bool const multi_section;
 };
 
 /**
@@ -644,6 +650,16 @@ struct aviutl2_object_info {
    * Note: For individual objects
    */
   int num;
+
+  /**
+   * Start frame number of the object in global (scene) coordinates (0 based)
+   */
+  int frame_s;
+
+  /**
+   * End frame number of the object in global (scene) coordinates (0 based)
+   */
+  int frame_e;
 };
 
 enum {

@@ -68,6 +68,7 @@ struct aviutl2_script_module_param {
 
   /**
    * Get parameter as data pointer
+   * Acquired from values such as LightUserData
    * @param index Parameter position (0 based)
    * @return Parameter value (NULL if not available)
    */
@@ -156,6 +157,7 @@ struct aviutl2_script_module_param {
 
   /**
    * Add data pointer return value
+   * Returns LightUserData
    * @param value Return value to add
    */
   void (*push_result_data)(void *value);
@@ -263,6 +265,32 @@ struct aviutl2_script_module_param {
    * Read-only functions are available during script processing
    */
   struct aviutl2_edit_section *edit;
+
+  //--------------------------------
+
+  /**
+   * Add function as return value
+   * @param func Callback function called when the returned function is executed
+   * @param userdata Pointer to arbitrary user data
+   */
+  void (*push_result_function)(void (*func)(struct aviutl2_script_module_param *), void *userdata);
+
+  /**
+   * Add metatable as return value
+   * Arguments in callbacks correspond to metamethods (__index for func_getter and __newindex for func_setter)
+   * @param func_getter Callback function called when getting a metatable value
+   * @param func_setter Callback function called when setting a metatable value
+   * @param userdata Pointer to arbitrary user data
+   */
+  void (*push_result_meta_table)(void (*func_getter)(struct aviutl2_script_module_param *),
+                                 void (*func_setter)(struct aviutl2_script_module_param *),
+                                 void *userdata);
+
+  /**
+   * Pointer to arbitrary user data
+   * Stores the argument value from push_result_function() and push_result_meta_table()
+   */
+  void *userdata;
 };
 
 //--------------------------------

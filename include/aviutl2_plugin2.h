@@ -123,6 +123,31 @@ struct aviutl2_track_info {
   bool timecontrol;    /**< Whether time control is enabled */
 };
 
+/**
+ * Number of palette colors
+ */
+enum {
+  aviutl2_palette_info_palette_num = 64,
+};
+
+/**
+ * Palette information
+ */
+struct aviutl2_palette_info {
+  struct {
+    uint8_t r, g, b, a; /**< Palette color (a is always 255) */
+  } color[aviutl2_palette_info_palette_num];
+};
+
+/**
+ * Event type
+ */
+enum aviutl2_event_type {
+  aviutl2_event_type_update_object = 1,      /**< Object information update */
+  aviutl2_event_type_change_edit_frame = 2,  /**< Current edit frame moved */
+  aviutl2_event_type_change_edit_scene = 3,  /**< Current edit scene changed (includes scene info update) */
+};
+
 //--------------------------------
 
 /**
@@ -529,6 +554,22 @@ struct aviutl2_edit_section {
                                 wchar_t const *item,
                                 struct aviutl2_track_info *info,
                                 int info_size);
+
+  /**
+   * Get current palette name
+   * Format is [label_name.palette_name] when labeled
+   * @return Current palette name. Valid until callback processing ends
+   */
+  wchar_t const *(*get_palette_name)(void);
+
+  /**
+   * Get information of specified palette
+   * @param name Palette name
+   * @param info Pointer to palette info storage
+   * @param info_size Size of palette info storage (only size bytes are retrieved if different from PALETTE_INFO)
+   * @return true if info was obtained (fails if target is not found)
+   */
+  bool (*get_palette_info)(wchar_t const *name, struct aviutl2_palette_info *info, int info_size);
 };
 
 /**
@@ -672,6 +713,22 @@ struct aviutl2_edit_handle {
    * Note: Calling this while holding a read lock or edit lock may cause deadlock
    */
   void (*wait_rendering_task)(void);
+
+  /**
+   * Enumerate font names via callback function (func_proc_enum_font)
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_enum_font Callback function for font name enumeration
+   */
+  void (*enum_font_name)(void *param, void (*func_proc_enum_font)(void *param, wchar_t const *name));
+
+  /**
+   * Enumerate palette names via callback function (func_proc_enum_palette)
+   * Acquires read lock for exclusive control of palette information.
+   * If already locked in the same thread, retrieves without additional locking.
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_enum_palette Callback function for palette name enumeration
+   */
+  void (*enum_palette_name)(void *param, void (*func_proc_enum_palette)(void *param, wchar_t const *name));
 };
 
 /**
@@ -1001,4 +1058,16 @@ struct aviutl2_host_app_table {
    *                   A collection created from DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED) is likely usable
    */
   void (*register_font_collection)(struct IDWriteFontCollection *collection);
+
+  /**
+   * Register callback function for specified event
+   * Callback function is called from the event thread
+   * call_edit_section() cannot be used from event processing
+   * @param type Event type
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_event Callback function for event processing
+   */
+  void (*register_event_listener)(enum aviutl2_event_type type,
+                                  void *param,
+                                  void (*func_proc_event)(void *param));
 };
