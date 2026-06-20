@@ -34,6 +34,7 @@
 struct ID3D11Texture2D;
 struct ID3D11BlendState;
 struct ID3D11SamplerState;
+struct IDWriteFont;
 struct aviutl2_edit_section;
 
 /**
@@ -1162,6 +1163,13 @@ struct aviutl2_filter_proc_video {
                                   int height,
                                   int pitch,
                                   enum aviutl2_input_pixel_format format);
+
+  /**
+   * Get a pointer to the DirectWrite font of a registered font (IDWriteFont)
+   * @param font Font name (registered name in the application)
+   * @return Pointer to IDWriteFont (returns NULL if the specified font does not exist)
+   */
+  struct IDWriteFont *(*get_font)(wchar_t const *font);
 };
 
 /**

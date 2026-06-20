@@ -121,6 +121,8 @@ struct aviutl2_track_info {
   bool decelerate;     /**< Whether deceleration is enabled */
   bool twopoint;       /**< Whether midpoint ignore is enabled */
   bool timecontrol;    /**< Whether time control is enabled */
+  int group_num;       /**< Number of track bars in the belonging group (1 if not grouped) */
+  int group_index;     /**< Index within the belonging group */
 };
 
 /**
