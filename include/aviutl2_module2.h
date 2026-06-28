@@ -32,6 +32,7 @@
 #include <stdint.h>
 
 struct aviutl2_edit_section;
+struct aviutl2_meta_method_function;
 
 /**
  * Script module parameter interface
@@ -276,21 +277,45 @@ struct aviutl2_script_module_param {
   void (*push_result_function)(void (*func)(struct aviutl2_script_module_param *), void *userdata);
 
   /**
-   * Add metatable as return value
-   * Arguments in callbacks correspond to metamethods (__index for func_getter and __newindex for func_setter)
-   * @param func_getter Callback function called when getting a metatable value
-   * @param func_setter Callback function called when setting a metatable value
-   * @param userdata Pointer to arbitrary user data
+   * Deprecated because this will be replaced by a new function
    */
-  void (*push_result_meta_table)(void (*func_getter)(struct aviutl2_script_module_param *),
-                                 void (*func_setter)(struct aviutl2_script_module_param *),
-                                 void *userdata);
+  void (*deprecated_push_result_meta_table)(void (*func_getter)(struct aviutl2_script_module_param *),
+                                            void (*func_setter)(struct aviutl2_script_module_param *),
+                                            void *userdata);
 
   /**
    * Pointer to arbitrary user data
    * Stores the argument value from push_result_function() and push_result_meta_table()
    */
   void *userdata;
+
+  /**
+   * Add metatable as return value
+   * Returns a metatable with callback functions set for arbitrary metamethods
+   * @param meta_method_functions List of metamethods to register
+   *        (pointer to a list of aviutl2_meta_method_function terminated by an element whose method name is NULL)
+   * @param userdata Pointer to arbitrary user data
+   */
+  void (*push_result_meta_table)(struct aviutl2_meta_method_function *meta_method_functions, void *userdata);
+
+  /**
+   * Get userdata pointer from metatable parameter
+   * @param index Parameter position (0 based)
+   * @param meta_method_functions Metamethod list for identifying the target metatable
+   *                              Can be obtained only when the same address is specified
+   * @return userdata pointer (NULL if not available)
+   */
+  void *(*get_param_meta_table)(int index, struct aviutl2_meta_method_function *meta_method_functions);
+};
+
+//--------------------------------
+
+/**
+ * Metamethod definition structure
+ */
+struct aviutl2_meta_method_function {
+  char const *method;                          /**< Metamethod name (Lua metamethods can be specified) */
+  void (*func)(struct aviutl2_script_module_param *); /**< Callback function */
 };
 
 //--------------------------------

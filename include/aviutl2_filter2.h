@@ -757,6 +757,7 @@ struct aviutl2_filter_proc_video {
   /**
    * Get image output item parameters of the specified object
    * @param object Target object handle (specify NULL to target the current object)
+   *               Only objects in the scene targeted by current filter processing can be obtained
    * @param offset Time offset to retrieve in seconds (0 for current time)
    * @param param Pointer to parameter storage
    * @param param_size Size of parameter storage. Only that size is retrieved
@@ -1165,11 +1166,10 @@ struct aviutl2_filter_proc_video {
                                   enum aviutl2_input_pixel_format format);
 
   /**
-   * Get a pointer to the DirectWrite font of a registered font (IDWriteFont)
-   * @param font Font name (registered name in the application)
-   * @return Pointer to IDWriteFont (returns NULL if the specified font does not exist)
+   * Deprecated because this is redundant
+   * Moved to aviutl2_edit_section
    */
-  struct IDWriteFont *(*get_font)(wchar_t const *font);
+  struct IDWriteFont *(*deprecated_get_font)(wchar_t const *font);
 };
 
 /**
@@ -1216,6 +1216,7 @@ struct aviutl2_filter_proc_audio {
   /**
    * Get audio output item parameters of the specified object
    * @param object Target object handle (specify NULL to target the current object)
+   *               Only objects in the scene targeted by current filter processing can be obtained
    * @param offset Time offset to retrieve in seconds (0 for current time)
    * @param param Pointer to parameter storage
    * @param param_size Size of parameter storage. Only that size is retrieved

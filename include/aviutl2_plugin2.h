@@ -47,6 +47,7 @@ struct aviutl2_edit_handle;
 struct aviutl2_project_file;
 struct aviutl2_pixel_rgba;
 struct IDWriteFontCollection;
+struct IDWriteFont;
 
 /**
  * Common plugin structure
@@ -123,6 +124,7 @@ struct aviutl2_track_info {
   bool timecontrol;    /**< Whether time control is enabled */
   int group_num;       /**< Number of track bars in the belonging group (1 if not grouped) */
   int group_index;     /**< Index within the belonging group */
+  wchar_t const *group_name; /**< Name of the belonging group (NULL if not grouped) */
 };
 
 /**
@@ -200,6 +202,7 @@ struct aviutl2_edit_section {
 
   /**
    * Find object at specified frame number or later
+   * If called from a filter plugin, searches objects in the target scene being processed
    * @param layer Target layer number
    * @param frame Frame number to start search from
    * @return Handle of found object (returns NULL if not found)
@@ -513,6 +516,7 @@ struct aviutl2_edit_section {
 
   /**
    * Get the value of an object's track bar item at the specified frame position
+   * If called from a filter plugin, only objects in the target scene being processed can be obtained
    * @param object Object handle
    * @param effect Target effect name (effect.name value in alias file)
    *               If there are multiple effects with the same name, you can specify an index with ":n" suffix
@@ -572,6 +576,28 @@ struct aviutl2_edit_section {
    * @return true if info was obtained (fails if target is not found)
    */
   bool (*get_palette_info)(wchar_t const *name, struct aviutl2_palette_info *info, int info_size);
+
+  /**
+   * Get a pointer to the DirectWrite font of a registered font (IDWriteFont)
+   * @param font Font name (registered name in the application)
+   * @return Pointer to IDWriteFont (returns NULL if the specified font does not exist)
+   */
+  struct IDWriteFont *(*get_font)(wchar_t const *font);
+
+  /**
+   * Get names of items belonging to an object's track bar group
+   * @param object Object handle
+   * @param effect Target effect name (effect.name value in alias file)
+   *               If there are multiple effects with the same name, you can specify an index with ":n" suffix
+   *               (n is a zero-based index)
+   * @param group_name Target track bar group item name (key name in alias file)
+   * @param item_names Pointer to storage for belonging item names
+   * @param item_num Number of item names storage entries
+   * @return Number of belonging item names that were obtained (returns 0 if the specified group does not exist)
+   *         If item_names is NULL, returns the number of belonging items
+   */
+  int (*get_object_track_group_names)(
+      aviutl2_object_handle object, wchar_t const *effect, wchar_t const *group_name, wchar_t const **item_names, int item_num);
 };
 
 /**
