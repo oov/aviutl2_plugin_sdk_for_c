@@ -35,6 +35,22 @@ struct aviutl2_edit_section;
 struct aviutl2_meta_method_function;
 
 /**
+ * Parameter type classification
+ */
+enum aviutl2_param_type {
+  aviutl2_param_type_none = -1,
+  aviutl2_param_type_nil = 0,
+  aviutl2_param_type_boolean = 1,
+  aviutl2_param_type_lightuserdata = 2,
+  aviutl2_param_type_number = 3,
+  aviutl2_param_type_string = 4,
+  aviutl2_param_type_table = 5,
+  aviutl2_param_type_function = 6,
+  aviutl2_param_type_userdata = 7,
+  aviutl2_param_type_thread = 8,
+};
+
+/**
  * Script module parameter interface
  * Used for passing parameters to and receiving results from script module functions
  */
@@ -306,6 +322,13 @@ struct aviutl2_script_module_param {
    * @return userdata pointer (NULL if not available)
    */
   void *(*get_param_meta_table)(int index, struct aviutl2_meta_method_function *meta_method_functions);
+
+  /**
+   * Get argument type
+   * @param index Parameter position (0 based)
+   * @return Parameter type
+   */
+  enum aviutl2_param_type (*get_param_type)(int index);
 };
 
 //--------------------------------

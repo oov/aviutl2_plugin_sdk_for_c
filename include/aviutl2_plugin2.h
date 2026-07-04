@@ -68,6 +68,14 @@ typedef void *aviutl2_object_handle;
 #endif
 
 /**
+ * Effect handle
+ */
+#ifndef AVIUTL2_EFFECT_HANDLE_DEFINED
+#define AVIUTL2_EFFECT_HANDLE_DEFINED
+typedef void *aviutl2_effect_handle;
+#endif
+
+/**
  * Object layer and frame information
  * In object frames, frame numbers and layer numbers start from 0 (different from UI display)
  */
@@ -144,6 +152,15 @@ struct aviutl2_palette_info {
 };
 
 /**
+ * BPM information
+ */
+struct aviutl2_bpm_info {
+  float tempo;  /**< Tempo */
+  int beat;     /**< Beat */
+  double offset; /**< Base time */
+};
+
+/**
  * Event type
  */
 enum aviutl2_event_type {
@@ -172,9 +189,9 @@ struct aviutl2_edit_info {
   int display_layer_num;    /**< Number of layers displayed in layer editor (not exact) */
   int select_range_start;   /**< Start frame number of frame range selection (-1 if not selected) */
   int select_range_end;     /**< End frame number of frame range selection (-1 if not selected) */
-  float grid_bpm_tempo;     /**< Grid(BPM) tempo */
-  int grid_bpm_beat;        /**< Grid(BPM) beat */
-  float grid_bpm_offset;    /**< Grid(BPM) base time */
+  float grid_bpm_tempo;     /**< Grid(BPM) tempo (first BPM entry) */
+  int grid_bpm_beat;        /**< Grid(BPM) beat (first BPM entry) */
+  float grid_bpm_offset;    /**< Grid(BPM) base time (first BPM entry) */
   int scene_id;             /**< Scene ID */
 };
 
@@ -229,7 +246,8 @@ struct aviutl2_edit_section {
    * @param object Object handle
    * @return Pointer to object alias data (UTF-8) (returns NULL if cannot be obtained).
    *         Same format as object alias file.
-   *         Returned string is valid until the next call to a function returning a string in the same thread
+   *         Returned string is valid until the next call to a function returning a string in the same thread,
+   *         or until callback processing ends
    */
   char const *(*get_object_alias)(aviutl2_object_handle object);
 
@@ -240,7 +258,8 @@ struct aviutl2_edit_section {
    * @param item Target configuration item name (key name in alias file)
    * @return Pointer to obtained configuration value (UTF-8) (returns NULL if cannot be obtained).
    *         Same format as configuration value in alias file.
-   *         Returned string is valid until the next call to a function returning a string in the same thread
+   *         Returned string is valid until the next call to a function returning a string in the same thread,
+   *         or until callback processing ends
    */
   char const *(*get_object_item_value)(aviutl2_object_handle object, wchar_t const *effect, wchar_t const *item);
 
@@ -598,6 +617,140 @@ struct aviutl2_edit_section {
    */
   int (*get_object_track_group_names)(
       aviutl2_object_handle object, wchar_t const *effect, wchar_t const *group_name, wchar_t const **item_names, int item_num);
+
+  /**
+   * Get list of BPM entries used by Grid(BPM)
+   * @param bpm_list Pointer to storage for BPM list
+   * @param bpm_num Number of BPM entries that can be stored
+   * @return Number of BPM entries obtained
+   *         If bpm_list is NULL, returns the number of BPM entries configured in Grid(BPM)
+   */
+  int (*get_grid_bpm_list)(struct aviutl2_bpm_info *bpm_list, int bpm_num);
+
+  /**
+   * Set list of BPM entries used by Grid(BPM) (not available with call_read_section)
+   * @param bpm_list Pointer to BPM list to set
+   * @param bpm_num Number of BPM entries to set
+   */
+  void (*set_grid_bpm_list)(struct aviutl2_bpm_info *bpm_list, int bpm_num);
+
+  /**
+   * Find effect from object
+   * @param object Object handle to search
+   * @param effect Effect name to search (effect.name value in alias file)
+   *               If there are multiple effects with the same name, you can specify an index with ":n" suffix
+   *               (n is a zero-based index)
+   *               If NULL is specified, the first effect is returned
+   * @return Handle of found effect (returns NULL if not found)
+   *         Effect handle is valid until effect is destroyed or callback processing ends
+   */
+  aviutl2_effect_handle (*find_effect)(aviutl2_object_handle object, wchar_t const *effect);
+
+  /**
+   * Get list of effects from object
+   * @param object Object handle
+   * @param effect_list Pointer to storage for effect handle list
+   * @param effect_num Number of effect handles that can be stored
+   * @return Number of effect handles obtained (returns 0 if unavailable)
+   *         If effect_list is NULL, returns the number of effects owned by the object
+   *         Effect handles are valid until effect is destroyed or callback processing ends
+   */
+  int (*get_effect_list)(aviutl2_object_handle object, aviutl2_effect_handle *effect_list, int effect_num);
+
+  /**
+   * Get effect name
+   * @param effect Effect handle
+   * @return Pointer to effect name (returns NULL if unavailable)
+   */
+  wchar_t const *(*get_effect_name)(aviutl2_effect_handle effect);
+
+  /**
+   * Get effect enabled state
+   * @param effect Effect handle
+   * @return true if the effect is enabled
+   */
+  bool (*get_effect_enable)(aviutl2_effect_handle effect);
+
+  /**
+   * Set effect enabled state (not available with call_read_section)
+   * @param effect Effect handle
+   * @param enable Effect enabled state to set
+   *               If the effect is an output item (standard drawing, etc.), it cannot be changed
+   *               (always enabled)
+   */
+  void (*set_effect_enable)(aviutl2_effect_handle effect, bool enable);
+
+  /**
+   * Get effect lock state
+   * @param effect Effect handle
+   * @return true if the effect is locked
+   */
+  bool (*get_effect_lock)(aviutl2_effect_handle effect);
+
+  /**
+   * Set effect lock state (not available with call_read_section)
+   * @param effect Effect handle
+   * @param lock Effect lock state to set
+   *             If the effect is audio, it cannot be changed
+   *             If the effect is an output item (standard drawing, etc.), it cannot be changed
+   *             (synchronized with input item)
+   */
+  void (*set_effect_lock)(aviutl2_effect_handle effect, bool lock);
+
+  /**
+   * Get effect setting item value as string
+   * @param effect Effect handle
+   * @param item Target setting item name (key name in alias file)
+   * @return Pointer to obtained setting value (UTF-8) (returns NULL if unavailable)
+   *         Same format as setting value in alias file
+   *         Returned string is valid until the next call to a function returning a string in the same thread,
+   *         or until callback processing ends
+   */
+  char const *(*get_effect_item_value)(aviutl2_effect_handle effect, wchar_t const *item);
+
+  /**
+   * Set effect setting item value as string (not available with call_read_section)
+   * @param effect Effect handle
+   * @param item Target setting item name (key name in alias file)
+   * @param value Setting value (UTF-8), same format as setting value in alias file
+   * @return true if setting succeeded (fails if target is not found)
+   */
+  bool (*set_effect_item_value)(aviutl2_effect_handle effect, wchar_t const *item, char const *value);
+
+  /**
+   * Get value of an effect's track bar item at specified frame position
+   * If called from a filter plugin, only objects in the target scene being processed can be retrieved
+   * @param effect Effect handle
+   * @param item Target track bar item name (key name in alias file)
+   * @param frame Target frame number to retrieve (fractional part can specify in-between frame position)
+   * @param value Pointer to storage for track bar item value
+   * @return true if value was obtained (fails if target is not found)
+   */
+  bool (*get_effect_track_value)(aviutl2_effect_handle effect, wchar_t const *item, double frame, double *value);
+
+  /**
+   * Get value of an effect's check box item (including per-section check boxes) at specified frame position
+   * @param effect Effect handle
+   * @param item Target check box item name (key name in alias file)
+   * @param frame Target frame number to retrieve (used for per-section check boxes)
+   * @param value Pointer to storage for check box item value
+   * @return true if value was obtained (fails if target is not found)
+   */
+  bool (*get_effect_check_value)(aviutl2_effect_handle effect, wchar_t const *item, int frame, bool *value);
+
+  /**
+   * Get information about an effect's track bar item
+   * @param effect Effect handle
+   * @param item Target track bar item name (key name in alias file)
+   * @param info Pointer to storage for track bar information
+   * @param info_size Size of track bar information storage
+   *                  (if different from aviutl2_track_info, only info_size bytes are obtained)
+   * @return true if info was obtained (fails if target is not found)
+   */
+  bool (*get_effect_track_info)(aviutl2_effect_handle effect,
+                                wchar_t const *item,
+                                struct aviutl2_track_info *info,
+                                int info_size);
 };
 
 /**
