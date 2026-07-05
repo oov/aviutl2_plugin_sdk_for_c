@@ -157,7 +157,8 @@ struct aviutl2_palette_info {
 struct aviutl2_bpm_info {
   float tempo;  /**< Tempo */
   int beat;     /**< Beat */
-  double offset; /**< Base time */
+  double start; /**< Start position (seconds) */
+  float offset; /**< Beat offset (seconds) */
 };
 
 /**
@@ -191,7 +192,7 @@ struct aviutl2_edit_info {
   int select_range_end;     /**< End frame number of frame range selection (-1 if not selected) */
   float grid_bpm_tempo;     /**< Grid(BPM) tempo (first BPM entry) */
   int grid_bpm_beat;        /**< Grid(BPM) beat (first BPM entry) */
-  float grid_bpm_offset;    /**< Grid(BPM) base time (first BPM entry) */
+  float grid_bpm_offset;    /**< Grid(BPM) beat offset (first BPM entry) */
   int scene_id;             /**< Scene ID */
 };
 
@@ -619,20 +620,14 @@ struct aviutl2_edit_section {
       aviutl2_object_handle object, wchar_t const *effect, wchar_t const *group_name, wchar_t const **item_names, int item_num);
 
   /**
-   * Get list of BPM entries used by Grid(BPM)
-   * @param bpm_list Pointer to storage for BPM list
-   * @param bpm_num Number of BPM entries that can be stored
-   * @return Number of BPM entries obtained
-   *         If bpm_list is NULL, returns the number of BPM entries configured in Grid(BPM)
+   * Deprecated because it has been replaced by a new function
    */
-  int (*get_grid_bpm_list)(struct aviutl2_bpm_info *bpm_list, int bpm_num);
+  int (*deprecated_get_grid_bpm_list)(struct aviutl2_bpm_info *bpm_list, int bpm_num);
 
   /**
-   * Set list of BPM entries used by Grid(BPM) (not available with call_read_section)
-   * @param bpm_list Pointer to BPM list to set
-   * @param bpm_num Number of BPM entries to set
+   * Deprecated because it has been replaced by a new function
    */
-  void (*set_grid_bpm_list)(struct aviutl2_bpm_info *bpm_list, int bpm_num);
+  void (*deprecated_set_grid_bpm_list)(struct aviutl2_bpm_info *bpm_list, int bpm_num);
 
   /**
    * Find effect from object
@@ -751,6 +746,26 @@ struct aviutl2_edit_section {
                                 wchar_t const *item,
                                 struct aviutl2_track_info *info,
                                 int info_size);
+
+  /**
+   * Get list of BPM entries used by Grid(BPM)
+   * @param bpm_list Pointer to storage for BPM list
+   * @param bpm_num Number of BPM entries that can be stored
+   * @param bpm_size Size of BPM information structure
+   *                 (if different from aviutl2_bpm_info, only bpm_size bytes are obtained)
+   * @return Number of BPM entries obtained
+   *         If bpm_list is NULL, returns the number of BPM entries configured in Grid(BPM)
+   */
+  int (*get_grid_bpm_list)(struct aviutl2_bpm_info *bpm_list, int bpm_num, int bpm_size);
+
+  /**
+   * Set list of BPM entries used by Grid(BPM) (not available with call_read_section)
+   * @param bpm_list Pointer to BPM list to set
+   * @param bpm_num Number of BPM entries to set
+   * @param bpm_size Size of BPM information structure
+   *                 (if different from aviutl2_bpm_info, only bpm_size bytes are set)
+   */
+  void (*set_grid_bpm_list)(struct aviutl2_bpm_info *bpm_list, int bpm_num, int bpm_size);
 };
 
 /**
