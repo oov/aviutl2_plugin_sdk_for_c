@@ -16,10 +16,10 @@ include/*.h にあるソースコードは aviutl2_plugin_sdk にあるサブモ
 - 元のソースコードはShift_JISで書かれています。iconv を利用して正しいコメントを把握した上で翻訳してください
 - 元のソースコードにないコメントは基本的には加えず、C言語用に変更した部分について説明が必要な場合のみ追加してください
 
-作業を円滑に行うため、以下の手順で作業するのがいいでしょう。
+作業を円滑に行うため、以下の手順で作業してください。
 
 1. `cd aviutl2_plugin_sdk` でサブモジュール内に移動する
-2. `COMMITID=$(git rev-parse HEAD)` で現在のコミットIDを控えてから `git pull origin main` する
+2. `COMMITID=$(git rev-parse HEAD)` で現在のコミットIDを控えてから `git fetch origin main --depth=1 && git checkout --detach FETCH_HEAD` する
 3. `git --no-pager diff $COMMITID | tee ../.working/diff-utf8.txt | iconv -c -f cp932 -t utf-8 > ../.working/diff-shift_jis.txt` で差分を取得
 4. 更に `git diff --name-status $COMMITID` で変わっているヘッダーファイル名を列挙して、TODOリストにまとめる
 5. `cd ..` でプロジェクトルートに戻り、ファイル毎に `.working/diff-shift_jis.txt` や `.working/diff-utf8.txt` を見ながらヘッダーファイルの変換作業を行い、TODOリストを消化していく
@@ -29,3 +29,7 @@ include/*.h にあるソースコードは aviutl2_plugin_sdk にあるサブモ
 
 なお、サブモジュールが更新されていてもヘッダーファイル類に更新がない場合も当然あります。
 その場合でもサブモジュールの更新は取り込み `git commit -m "update submodule to <commit id>"` のようにコミットして `git push origin main` してください。
+
+なお、このセッションは非対話で実行されます。
+ユーザーへ確認を求めたり「必要なら続けます」と言って作業を中断することは認められません。
+ただし作業を進める上で意図しない問題が発生した場合は強引に解決せず、未完了として問題の内容を報告してください。
