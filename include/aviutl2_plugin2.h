@@ -165,9 +165,10 @@ struct aviutl2_bpm_info {
  * Event type
  */
 enum aviutl2_event_type {
-  aviutl2_event_type_update_object = 1,      /**< Object information update */
-  aviutl2_event_type_change_edit_frame = 2,  /**< Current edit frame moved */
-  aviutl2_event_type_change_edit_scene = 3,  /**< Current edit scene changed (includes scene info update) */
+  aviutl2_event_type_update_object = 1,       /**< Object information update */
+  aviutl2_event_type_change_edit_frame = 2,   /**< Current edit frame moved */
+  aviutl2_event_type_change_edit_scene = 3,   /**< Current edit scene changed (includes scene info update) */
+  aviutl2_event_type_change_focus_object = 4, /**< Selected object changed */
 };
 
 //--------------------------------
