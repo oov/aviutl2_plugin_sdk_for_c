@@ -46,7 +46,7 @@ fi
 echo "Header changes detected. Launching AI to process updates..."
 INITIAL_HEAD=$(git rev-parse HEAD)
 pushd "$SCRIPT_DIR" > /dev/null
-codex exec --cd "$SCRIPT_DIR" --sandbox danger-full-access --model gpt-5.3-codex - < UPDATE-PROMPT.md
+codex exec --cd "$SCRIPT_DIR" --sandbox danger-full-access --model gpt-5.6-luna --config model_reasoning_effort="xhigh" - < UPDATE-PROMPT.md
 popd > /dev/null
 test "$(git rev-parse HEAD)" != "$INITIAL_HEAD"
 test -z "$(git status --porcelain)"
