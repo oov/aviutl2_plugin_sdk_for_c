@@ -44,7 +44,10 @@ if [ "${CODEX_DEFER_IF_NEEDED:-}" = "1" ]; then
 fi
 
 echo "Header changes detected. Launching AI to process updates..."
-
+INITIAL_HEAD=$(git rev-parse HEAD)
 pushd "$SCRIPT_DIR" > /dev/null
 codex exec --cd "$SCRIPT_DIR" --sandbox danger-full-access --model gpt-5.3-codex - < UPDATE-PROMPT.md
 popd > /dev/null
+test "$(git rev-parse HEAD)" != "$INITIAL_HEAD"
+test -z "$(git status --porcelain)"
+test "$(git rev-parse HEAD)" = "$(git ls-remote origin refs/heads/main | awk '{print $1}')"
