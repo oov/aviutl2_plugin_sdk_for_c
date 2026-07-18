@@ -302,7 +302,7 @@ struct aviutl2_edit_section {
   /**
    * Set object to be selected in object configuration window (not available with call_read_section)
    * Set at end of callback processing
-   * @param object Object handle
+   * @param object Object handle (specifying NULL clears the selection)
    */
   void (*set_focus_object)(aviutl2_object_handle object);
 
