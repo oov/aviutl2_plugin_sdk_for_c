@@ -289,6 +289,7 @@ struct aviutl2_edit_section {
 
   /**
    * Delete object (not available with call_read_section)
+   * Do not delete objects created within the same edit section
    * @param object Object handle
    */
   void (*delete_object)(aviutl2_object_handle object);
@@ -767,6 +768,48 @@ struct aviutl2_edit_section {
    *                 (if different from aviutl2_bpm_info, only bpm_size bytes are set)
    */
   void (*set_grid_bpm_list)(struct aviutl2_bpm_info *bpm_list, int bpm_num, int bpm_size);
+
+  /**
+   * Add an effect to an object (not available with call_read_section)
+   * @param object Object handle to add the effect to
+   * @param effect Effect name to add (effect.name value in alias file)
+   * @return Handle of the added effect (returns NULL if it cannot be added)
+   *         The effect handle is valid until the effect is destroyed or callback processing ends
+   */
+  aviutl2_effect_handle (*create_effect)(aviutl2_object_handle object, wchar_t const *effect);
+
+  /**
+   * Delete an effect from an object (not available with call_read_section)
+   * @param object Object handle to delete the effect from
+   * @param effect Effect handle to delete
+   * @return true if deletion succeeded
+   */
+  bool (*delete_effect)(aviutl2_object_handle object, aviutl2_effect_handle effect);
+
+  /**
+   * Add an intermediate point (section) to an object (not available with call_read_section)
+   * @param object Object handle to add the intermediate point to
+   * @param frame Frame number at which to add the intermediate point
+   * @return true if addition succeeded
+   */
+  bool (*create_object_section)(aviutl2_object_handle object, int frame);
+
+  /**
+   * Delete an intermediate point (section) from an object (not available with call_read_section)
+   * @param object Object handle to delete the intermediate point from
+   * @param section Section number of the intermediate point to delete (section number at the start position)
+   * @return true if deletion succeeded
+   */
+  bool (*delete_object_section)(aviutl2_object_handle object, int section);
+
+  /**
+   * Move an intermediate point (section) of an object (not available with call_read_section)
+   * @param object Object handle whose intermediate point is to be moved
+   * @param section Section number of the intermediate point to move (section number at the start position)
+   * @param frame Destination frame number. Moving across sections is not possible
+   * @return true if movement succeeded
+   */
+  bool (*move_object_section)(aviutl2_object_handle object, int section, int frame);
 };
 
 /**

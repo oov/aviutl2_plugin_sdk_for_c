@@ -266,6 +266,7 @@ struct aviutl2_filter_item_file {
 /**
  * Generic data filter item (non-UI item)
  * Allows the filter procedure to share arbitrary data blocks
+ * The data size can be changed with set_filter_item_data_size() in the filter procedure
  */
 struct aviutl2_filter_item_data {
   /**
@@ -284,7 +285,7 @@ struct aviutl2_filter_item_data {
   void *value;
 
   /**
-   * Size of data block in bytes (1024 bytes or less)
+   * Size of data block in bytes (16 KB or less)
    */
   int size;
 };
@@ -1170,6 +1171,20 @@ struct aviutl2_filter_proc_video {
    * Moved to aviutl2_edit_section
    */
   struct IDWriteFont *(*deprecated_get_font)(wchar_t const *font);
+
+  /**
+   * Change the data size of the specified generic data filter item
+   * Changing the size updates the pointer to the generic data
+   * @param filter_item_data Pointer to the target aviutl2_filter_item_data
+   * @param size Size of the generic data
+   */
+  void (*set_filter_item_data_size)(void *filter_item_data, int size);
+
+  /**
+   * User data pointer (set when FLAG_USERDATA is enabled)
+   * Pointer to user data returned by func_create()
+   */
+  void *userdata;
 };
 
 /**
@@ -1234,6 +1249,20 @@ struct aviutl2_filter_proc_audio {
    * @return Handle of the obtained object (returns NULL if it does not exist)
    */
   aviutl2_object_handle (*get_audio_object)(int layer, double offset);
+
+  /**
+   * Change the data size of the specified generic data filter item
+   * Changing the size updates the pointer to the generic data
+   * @param filter_item_data Pointer to the target aviutl2_filter_item_data
+   * @param size Size of the generic data (16 KB or less)
+   */
+  void (*set_filter_item_data_size)(void *filter_item_data, int size);
+
+  /**
+   * User data pointer (set when FLAG_USERDATA is enabled)
+   * Pointer to user data returned by func_create()
+   */
+  void *userdata;
 };
 
 //--------------------------------
@@ -1263,6 +1292,12 @@ struct aviutl2_filter_plugin_table {
      * For filter objects, image size cannot be changed
      */
     aviutl2_filter_plugin_table_flag_filter = 8,
+
+    /**
+     * Support user data
+     * func_create() and func_destroy() are called
+     */
+    aviutl2_filter_plugin_table_flag_userdata = 16,
   };
 
   /**
@@ -1305,4 +1340,23 @@ struct aviutl2_filter_plugin_table {
    * @return Returning false aborts subsequent filter and output processing
    */
   bool (*func_proc_audio)(struct aviutl2_filter_proc_audio *audio);
+
+  /**
+   * Function pointer called when an effect instance is created
+   * Called only if FLAG_USERDATA is set
+   * This is also called when the effect is not associated with an object
+   * @param effect_id Effect ID (unique for each host application startup)
+   * @return Pointer to arbitrary user data
+   */
+  void *(*func_create)(int64_t effect_id);
+
+  /**
+   * Function pointer called when an effect instance is destroyed
+   * Called after all instances in edit data, Undo buffers, and similar data are destroyed
+   * Called only if FLAG_USERDATA is set
+   * This is also called when the effect is not associated with an object
+   * @param effect_id Effect ID (unique for each host application startup)
+   * @param userdata Pointer to user data returned by func_create()
+   */
+  void (*func_destroy)(int64_t effect_id, void *userdata);
 };
