@@ -266,6 +266,7 @@ struct aviutl2_filter_item_file {
 /**
  * Generic data filter item (non-UI item)
  * Allows the filter procedure to share arbitrary data blocks
+ * Note: Does not create an Undo point or set the edited flag
  * The data size can be changed with set_filter_item_data_size() in the filter procedure
  */
 struct aviutl2_filter_item_data {
@@ -662,6 +663,12 @@ struct aviutl2_object_info {
    * End frame number of the object in global (scene) coordinates (0 based)
    */
   int frame_e;
+
+  /**
+   * Current layer number of the target effect
+   * Note: This is the layer number of its own object
+   */
+  int effect_layer;
 };
 
 enum {

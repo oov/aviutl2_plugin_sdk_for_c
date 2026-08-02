@@ -773,6 +773,7 @@ struct aviutl2_edit_section {
    * Add an effect to an object (not available with call_read_section)
    * @param object Object handle to add the effect to
    * @param effect Effect name to add (effect.name value in alias file)
+   *         If the effect is an input/output item (such as Figure or Standard Drawing), it is replaced
    * @return Handle of the added effect (returns NULL if it cannot be added)
    *         The effect handle is valid until the effect is destroyed or callback processing ends
    */
@@ -810,6 +811,49 @@ struct aviutl2_edit_section {
    * @return true if movement succeeded
    */
   bool (*move_object_section)(aviutl2_object_handle object, int section, int frame);
+
+  /**
+   * Move the order of an effect (not available with call_read_section)
+   * Note: The order can be moved when the effect type is a filter effect
+   * @param object Object handle whose effect order is to be moved
+   * @param effect Effect handle whose order is to be moved
+   * @param index Destination order index
+   * @return Order index after movement (returns -1 if the target is not found)
+   */
+  int (*move_effect)(aviutl2_object_handle object, aviutl2_effect_handle effect, int index);
+
+  /**
+   * Get the value of an effect's generic data item
+   * @param effect Effect handle
+   * @param item Target setting item name (key name in alias file)
+   * @param data Pointer to storage for generic data
+   * @param size Size of generic data storage. If different from the actual size, only size bytes are obtained
+   * @return Size of generic data obtained (returns 0 if unavailable)
+   *         If data is NULL, returns the size of the generic data
+   */
+  int (*get_effect_data_value)(aviutl2_effect_handle effect,
+                               wchar_t const *item,
+                               void *data,
+                               int size);
+
+  /**
+   * Set the value of an effect's generic data item (not available with call_read_section)
+   * @param effect Effect handle
+   * @param item Target setting item name (key name in alias file)
+   * @param data Pointer to generic data to set
+   * @param size Size of generic data to set
+   * @return true if setting succeeded (fails if the target is not found)
+   */
+  bool (*set_effect_data_value)(aviutl2_effect_handle effect,
+                                wchar_t const *item,
+                                void *data,
+                                int size);
+
+  /**
+   * Set edit data to the edited state
+   * Note: Normally set automatically
+   */
+  void (*set_edited_state)(void);
 };
 
 /**
@@ -910,8 +954,8 @@ struct aviutl2_edit_handle {
   /**
    * Render the video of the current scene
    * This function only enqueues a rendering task and returns immediately
-   * The callback function is called from a rendering thread after rendering is completed
-   * @param frame Frame to render
+   * The callback function is called from the event notification thread after rendering is completed
+   * @param frame Frame number to render
    * @param param Pointer to arbitrary user data
    * @param func_proc_rendering_video Callback function called on completion
    *        buffer: Pointer to rendered image data (PIXEL_RGBA format)
@@ -931,8 +975,8 @@ struct aviutl2_edit_handle {
   /**
    * Render the audio of the current scene
    * This function only enqueues a rendering task and returns immediately
-   * The callback function is called from a rendering thread after rendering is completed
-   * @param frame Frame to render
+   * The callback function is called from the event notification thread after rendering is completed
+   * @param frame Frame number to render
    * @param param Pointer to arbitrary user data
    * @param func_proc_rendering_audio Callback function called on completion
    *        buffer0: Pointer to rendered audio data (left channel, PCM(float) 32-bit format)
@@ -969,6 +1013,57 @@ struct aviutl2_edit_handle {
    * @param func_proc_enum_palette Callback function for palette name enumeration
    */
   void (*enum_palette_name)(void *param, void (*func_proc_enum_palette)(void *param, wchar_t const *name));
+
+  /**
+   * Render the video of the specified object
+   * This function only enqueues a rendering task and returns immediately
+   * The callback function is called from the event notification thread after rendering is completed
+   * @param object Object handle to render
+   * @param frame Frame number to render
+   * @param apply_effect Whether to apply additional filter effects. Group control additional effects are not applied
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_rendering_video Callback function called on completion
+   *        buffer: Pointer to rendered image data (PIXEL_RGBA format)
+   *        width,height: Rendered image size
+   *        pitch: Number of bytes per row in rendered image data
+   * @return true if rendering request succeeds (fails for objects outside the target or during output)
+   */
+  bool (*rendering_object_video)(
+      aviutl2_object_handle object,
+      int frame,
+      bool apply_effect,
+      void *param,
+      void (*func_proc_rendering_video)(void *param,
+                                        int frame,
+                                        void const *buffer,
+                                        int width,
+                                        int height,
+                                        int pitch));
+
+  /**
+   * Render the audio of the specified object
+   * This function only enqueues a rendering task and returns immediately
+   * The callback function is called from the event notification thread after rendering is completed
+   * @param object Object handle to render
+   * @param frame Frame number to render
+   * @param apply_effect Whether to apply additional filter effects. Group control additional effects are not applied
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_rendering_audio Callback function called on completion
+   *        buffer0: Pointer to rendered audio data (left channel, PCM(float) 32-bit format)
+   *        buffer1: Pointer to rendered audio data (right channel, PCM(float) 32-bit format)
+   *        sample_num: Number of rendered audio samples
+   * @return true if rendering request succeeds (fails during output and similar states)
+   */
+  bool (*rendering_object_audio)(
+      aviutl2_object_handle object,
+      int frame,
+      bool apply_effect,
+      void *param,
+      void (*func_proc_rendering_audio)(void *param,
+                                        int frame,
+                                        float const *buffer0,
+                                        float const *buffer1,
+                                        int sample_num));
 };
 
 /**
@@ -1301,7 +1396,7 @@ struct aviutl2_host_app_table {
 
   /**
    * Register callback function for specified event
-   * Callback function is called from the event thread
+   * Callback function is called from the event notification thread
    * call_edit_section() cannot be used from event processing
    * @param type Event type
    * @param param Pointer to arbitrary user data
