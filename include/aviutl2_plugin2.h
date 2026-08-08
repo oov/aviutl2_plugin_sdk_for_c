@@ -804,9 +804,10 @@ struct aviutl2_edit_section {
   bool (*delete_object_section)(aviutl2_object_handle object, int section);
 
   /**
-   * Move an intermediate point (section) of an object (not available with call_read_section)
-   * @param object Object handle whose intermediate point is to be moved
-   * @param section Section number of the intermediate point to move (section number at the start position)
+   * Move the start position of an object's section (not available with call_read_section)
+   * Note: If the section number to move (section) is the number of sections (last section + 1), the end point is moved
+   * @param object Object handle whose section is to be moved
+   * @param section Section number of the section to move (0 to the number of sections)
    * @param frame Destination frame number. Moving across sections is not possible
    * @return true if movement succeeded
    */
@@ -854,6 +855,57 @@ struct aviutl2_edit_section {
    * Note: Normally set automatically
    */
   void (*set_edited_state)(void);
+
+  /**
+   * Get the list of marked frames
+   * @param frame_list Pointer to storage for the list of frame numbers
+   * @param frame_num Number of entries in the frame number list storage
+   * @return Number of frame numbers obtained
+   *         If frame_list is NULL, returns the number of marked frames
+   */
+  int (*get_mark_frame_list)(int *frame_list, int frame_num);
+
+  /**
+   * Get the memo of the mark at the specified frame
+   * @param frame Frame number whose mark memo is to be retrieved
+   * @return Pointer to the mark memo (returns NULL if unavailable)
+   *         Valid until the mark is edited or callback processing ends
+   */
+  wchar_t const *(*get_mark_frame_memo)(int frame);
+
+  /**
+   * Mark the specified frame (not available with call_read_section)
+   * If the frame is already marked, its memo is updated
+   * @param frame Frame number to mark
+   * @param memo Mark memo (specifying NULL sets an empty memo)
+   */
+  void (*set_mark_frame)(int frame, wchar_t const *memo);
+
+  /**
+   * Clear the mark at the specified frame (not available with call_read_section)
+   * @param frame Frame number whose mark is to be cleared
+   */
+  void (*clear_mark_frame)(int frame);
+
+  /**
+   * Move the mark at the specified frame (not available with call_read_section)
+   * @param frame Frame number whose mark is to be moved
+   * @param frame_to Destination frame number for the mark
+   * @return true if movement succeeded (fails if the source is not marked or the destination is already marked)
+   */
+  bool (*move_mark_frame)(int frame, int frame_to);
+
+  /**
+   * Set the information of the specified palette (not available with call_read_section)
+   * Note: Saves and reloads the palette file
+   * @param name Palette name
+   * @param info Pointer to palette information
+   * @param info_size Size of palette information (size of PALETTE_INFO)
+   * @return true if setting succeeded (fails if the target is not found)
+   */
+  bool (*set_palette_info)(wchar_t const *name,
+                           struct aviutl2_palette_info *info,
+                           int info_size);
 };
 
 /**
@@ -1064,6 +1116,22 @@ struct aviutl2_edit_handle {
                                         float const *buffer0,
                                         float const *buffer1,
                                         int sample_num));
+
+  /**
+   * Get names of items belonging to the group containing the specified setting item
+   * @param effect Target effect name (effect.name value in alias file)
+   * @param item Target setting item name (key name in alias file)
+   * @param item_names Pointer to storage for names of items belonging to the group
+   * @param item_num Number of entries in the item names storage
+   * @param item_index Pointer to storage for the index of the target setting item within the group (not stored if NULL)
+   * @return Number of belonging item names obtained (returns 0 if the item does not belong to a group)
+   *         If item_names is NULL, returns the number of items in the group
+   */
+  int (*get_effect_item_group_names)(wchar_t const *effect,
+                                     wchar_t const *item,
+                                     wchar_t const **item_names,
+                                     int item_num,
+                                     int *item_index);
 };
 
 /**
@@ -1199,6 +1267,7 @@ struct aviutl2_host_app_table {
   /**
    * Register filter plugin
    * @param filter_plugin_table Filter plugin table
+   * @note When FLAG_USERDATA is used, UninitializePlugin() is called after edit resources have been destroyed
    */
   void (*register_filter_plugin)(struct aviutl2_filter_plugin_table *filter_plugin_table);
 
