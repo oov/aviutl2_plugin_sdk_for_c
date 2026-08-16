@@ -897,7 +897,7 @@ struct aviutl2_edit_section {
 
   /**
    * Set the information of the specified palette (not available with call_read_section)
-   * Note: Saves and reloads the palette file
+   * Note: Saves the palette file
    * @param name Palette name
    * @param info Pointer to palette information
    * @param info_size Size of palette information (size of PALETTE_INFO)
@@ -1119,6 +1119,7 @@ struct aviutl2_edit_handle {
 
   /**
    * Get names of items belonging to the group containing the specified setting item
+   * Group items can also be specified directly (specify NULL for item_index)
    * @param effect Target effect name (effect.name value in alias file)
    * @param item Target setting item name (key name in alias file)
    * @param item_names Pointer to storage for names of items belonging to the group
@@ -1169,7 +1170,7 @@ enum {
  */
 enum {
   aviutl2_effect_item_type_integer = 1, /**< Integer */
-  aviutl2_effect_item_type_number = 2,  /**< Number */
+  aviutl2_effect_item_type_number = 2,  /**< Number (track bar) */
   aviutl2_effect_item_type_check = 3,   /**< Check box */
   aviutl2_effect_item_type_text = 4,    /**< Text */
   aviutl2_effect_item_type_string = 5,  /**< String */
@@ -1184,6 +1185,9 @@ enum {
   aviutl2_effect_item_type_figure = 14, /**< Figure */
   aviutl2_effect_item_type_data = 15,   /**< Data */
   aviutl2_effect_item_type_folder = 16, /**< Folder */
+  aviutl2_effect_item_type_number_group = 17, /**< Number (track bar) group */
+  aviutl2_effect_item_type_group = 18,        /**< Setting group (explicit groups only); no setting value */
+  aviutl2_effect_item_type_separator = 19,   /**< Separator; no setting value */
 };
 
 //--------------------------------

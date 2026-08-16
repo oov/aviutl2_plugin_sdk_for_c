@@ -225,7 +225,7 @@ struct aviutl2_cache_handle {
    * Get image cache data
    * @param identifier Cache identifier pointer. Specify any static pointer (such as aviutl2_cache_handle or
    *                   aviutl2_filter_plugin_table)
-   * @param name Cache identifier name. Any name can be assigned
+   * @param name Cache identifier name. Name identifying the created image cache
    * @return Image cache data. Use aviutl2_cache_image_available() to check for acquisition failure
    */
   struct aviutl2_cache_image (*get_image_cache)(void *identifier, wchar_t const *name);
@@ -234,7 +234,7 @@ struct aviutl2_cache_handle {
    * Create image cache data
    * @param identifier Cache identifier pointer. Specify any static pointer (such as aviutl2_cache_handle or
    *                   aviutl2_filter_plugin_table)
-   * @param name Cache identifier name. Any name can be assigned
+   * @param name Cache identifier name. Any identifier name can be assigned
    * @param width Image width of the cache to create
    * @param height Image height of the cache to create
    * @return Image cache data. Image data can be written to the returned cache
@@ -245,7 +245,7 @@ struct aviutl2_cache_handle {
    * Get audio cache data
    * @param identifier Cache identifier pointer. Specify any static pointer (such as aviutl2_cache_handle or
    *                   aviutl2_filter_plugin_table)
-   * @param name Cache identifier name. Any name can be assigned
+   * @param name Cache identifier name. Name identifying the created audio cache
    * @return Audio cache data. Use aviutl2_cache_audio_available() to check for acquisition failure
    */
   struct aviutl2_cache_audio (*get_audio_cache)(void *identifier, wchar_t const *name);
@@ -254,7 +254,7 @@ struct aviutl2_cache_handle {
    * Create audio cache data
    * @param identifier Cache identifier pointer. Specify any static pointer (such as aviutl2_cache_handle or
    *                   aviutl2_filter_plugin_table)
-   * @param name Cache identifier name. Any name can be assigned
+   * @param name Cache identifier name. Any identifier name can be assigned
    * @param sample_num Number of samples in the audio cache to create
    * @param channel_num Number of channels in the audio cache to create (1 = mono / 2 = stereo)
    * @return Audio cache data. Audio data can be written to the returned cache
@@ -329,4 +329,20 @@ struct aviutl2_cache_handle {
                              int sample_num,
                              float *buffer0,
                              float *buffer1);
+
+  /**
+   * Clear image cache data
+   * @param identifier Cache identifier pointer. Specify any static pointer (such as aviutl2_cache_handle or
+   *                   aviutl2_filter_plugin_table)
+   * @param name Cache identifier name. Name identifying the created image cache
+   */
+  void (*clear_image_cache)(void *identifier, wchar_t const *name);
+
+  /**
+   * Clear audio cache data
+   * @param identifier Cache identifier pointer. Specify any static pointer (such as aviutl2_cache_handle or
+   *                   aviutl2_filter_plugin_table)
+   * @param name Cache identifier name. Name identifying the created audio cache
+   */
+  void (*clear_audio_cache)(void *identifier, wchar_t const *name);
 };

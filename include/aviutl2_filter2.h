@@ -669,6 +669,11 @@ struct aviutl2_object_info {
    * Note: This is the layer number of its own object
    */
   int effect_layer;
+
+  /**
+   * Rendering origin frame in global (scene) coordinates (integer starting at 0)
+   */
+  int origin_frame;
 };
 
 enum {
