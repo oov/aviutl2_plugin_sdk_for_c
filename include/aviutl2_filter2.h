@@ -267,6 +267,7 @@ struct aviutl2_filter_item_file {
  * Generic data filter item (non-UI item)
  * Allows the filter procedure to share arbitrary data blocks
  * Note: Does not create an Undo point or set the edited flag
+ * Note: Saved generic data is initialized to the default value when empty
  * The data size can be changed with set_filter_item_data_size() in the filter procedure
  */
 struct aviutl2_filter_item_data {
