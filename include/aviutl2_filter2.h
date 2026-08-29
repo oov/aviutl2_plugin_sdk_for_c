@@ -416,6 +416,49 @@ struct aviutl2_filter_item_separator {
   wchar_t const *name;
 };
 
+/**
+ * Hidden condition filter item
+ * Items that meet the hide condition can be hidden
+ * Example: struct aviutl2_filter_item_hide_rule hide = { L"hiderule", L"File", L"Check", aviutl2_filter_item_hide_rule_operator_equal, 0 };
+ */
+enum aviutl2_filter_item_hide_rule_operator {
+  aviutl2_filter_item_hide_rule_operator_equal = 0,     /**< == (Equal) */
+  aviutl2_filter_item_hide_rule_operator_not_equal = 1, /**< != (Not equal) */
+  aviutl2_filter_item_hide_rule_operator_greater = 2,   /**< > (Greater) */
+  aviutl2_filter_item_hide_rule_operator_less = 3,      /**< < (Less) */
+};
+
+struct aviutl2_filter_item_hide_rule {
+  /**
+   * Setting type (L"hiderule")
+   */
+  wchar_t const *type;
+
+  /**
+   * Setting name to hide (only items with a setting value)
+   */
+  wchar_t const *name;
+
+  /**
+   * Setting name of the hide condition
+   * Check box items (excluding per-section items), list selection items, file selection items, and folder selection items
+   * File and folder selection items return whether they are selected (0/1)
+   * Specify NULL to always hide
+   * Specify "filter" to return whether it is a filter object (0/1)
+   */
+  wchar_t const *condition_name;
+
+  /**
+   * Comparison type for the hide condition
+   */
+  enum aviutl2_filter_item_hide_rule_operator const condition_operator;
+
+  /**
+   * Comparison value for the hide condition
+   */
+  int const condition_value;
+};
+
 //--------------------------------
 
 /**
