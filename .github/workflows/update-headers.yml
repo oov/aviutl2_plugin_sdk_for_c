@@ -19,6 +19,11 @@ jobs:
           submodules: false
           fetch-depth: 1
 
+      - name: Configure Git identity
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
       - name: Run update script without Codex
         id: update_without_codex
         env:

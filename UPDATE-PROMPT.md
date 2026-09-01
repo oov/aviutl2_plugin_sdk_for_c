@@ -24,11 +24,11 @@ include/*.h にあるソースコードは aviutl2_plugin_sdk にあるサブモ
 4. 更に `git diff --name-status $COMMITID` で変わっているヘッダーファイル名を列挙して、TODOリストにまとめる
 5. `cd ..` でプロジェクトルートに戻り、ファイル毎に `.working/diff-shift_jis.txt` や `.working/diff-utf8.txt` を見ながらヘッダーファイルの変換作業を行い、TODOリストを消化していく
 6. 全てのヘッダーファイルを変換し終わったら `git --no-pager diff > .working/diff-c.txt` で変更点を書き出し、`.working/diff-shift_jis.txt` や `.working/diff-utf8.txt` と突き合わせて漏れがないか確認する
-7. `git add . && git commit -m "sync to $(cat aviutl2_plugin_sdk/.tools/sdk_last_update.txt)"` でコミットする
+7. `git add . && git commit -m "sync to $(cat aviutl2_plugin_sdk/.tools/sdk_last_update.txt)" -m "Co-authored-by: Codex <noreply@openai.com>"` でコミットする
 8. `git push origin main` でリモートにプッシュする
 
 なお、サブモジュールが更新されていてもヘッダーファイル類に更新がない場合も当然あります。
-その場合でもサブモジュールの更新は取り込み `git commit -m "update submodule to <commit id>"` のようにコミットして `git push origin main` してください。
+その場合でもサブモジュールの更新は取り込み `git commit -m "update submodule to <commit id>" -m "Co-authored-by: Codex <noreply@openai.com>"` のようにコミットして `git push origin main` してください。
 
 なお、このセッションは非対話で実行されます。
 ユーザーへ確認を求めたり「必要なら続けます」と言って作業を中断することは認められません。
