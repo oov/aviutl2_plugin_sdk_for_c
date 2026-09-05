@@ -441,7 +441,8 @@ struct aviutl2_filter_item_hide_rule {
 
   /**
    * Setting name of the hide condition
-   * Check box items (excluding per-section items), list selection items, file selection items, and folder selection items
+   * Check box items, list selection items, file selection items, and folder selection items
+   * Per-section check box items return 2 when per-section is enabled (0/1/2)
    * File and folder selection items return whether they are selected (0/1)
    * Specify NULL to always hide
    * Specify "filter" to return whether it is a filter object (0/1)
