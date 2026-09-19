@@ -38,6 +38,12 @@ struct IDWriteFont;
 struct aviutl2_edit_section;
 
 /**
+ * DirectXMath XMMATRIX forward declaration
+ * The matrix is opaque when used from C
+ */
+struct aviutl2_xmmatrix;
+
+/**
  * Object handle
  */
 #ifndef AVIUTL2_OBJECT_HANDLE_DEFINED
@@ -316,7 +322,7 @@ struct aviutl2_filter_item_group {
 
 /**
  * Button filter item
- * Note: Uses the same callback signature as edit callbacks in plugin2.h
+ * The callback uses the same argument format as get_object_item_value() in plugin2.h
  */
 struct aviutl2_filter_item_button {
   /**
@@ -334,6 +340,15 @@ struct aviutl2_filter_item_button {
    * Setting values of each setting item are updated when this callback is invoked
    */
   void (*callback)(struct aviutl2_edit_section *edit);
+
+  /**
+   * Callback function when button is pressed (with object and setting item information)
+   * The arguments have the same format as get_object_item_value()
+   */
+  void (*callback2)(struct aviutl2_edit_section *edit,
+                   aviutl2_object_handle object,
+                   wchar_t const *effect,
+                   wchar_t const *item);
 };
 
 /**
@@ -900,6 +915,7 @@ struct aviutl2_filter_proc_video {
 
   /**
    * Set the blend mode for drawing
+   * The blend mode for drawing to the framebuffer is applied only when the original blend mode is normal
    * Drawing becomes heavier when a blend mode is used
    * @param blend Blend mode
    */
@@ -1276,6 +1292,30 @@ struct aviutl2_filter_proc_video {
                       struct aviutl2_effect_item_param *param_list,
                       int param_num,
                       wchar_t const *resource);
+
+  /**
+   * Set the blend mode for drawing
+   * Unlike set_blend_mode(), the blend mode for drawing to the framebuffer is always applied
+   * Drawing becomes heavier when a blend mode is used
+   * @param blend Blend mode
+   */
+  void (*set_blend_mode_force)(enum aviutl2_blend_mode blend);
+
+  /**
+   * Get the group control object affecting the current object
+   * @param index Index of the group control affecting the object in the upper direction
+   *              (0 is the immediately preceding group control)
+   * @return Handle of the obtained group control object (NULL if not affected by a group control)
+   */
+  aviutl2_object_handle (*get_group_control_object)(int index);
+
+  /**
+   * Get the coordinate transformation matrix applied to the current object by group controls
+   * (the combined matrix of the group controls affecting the object)
+   * @param matrix Pointer to matrix storage
+   * @return false if the object is not affected by group controls
+   */
+  bool (*get_group_matrix)(struct aviutl2_xmmatrix *matrix);
 };
 
 /**
@@ -1389,6 +1429,11 @@ struct aviutl2_filter_plugin_table {
      * func_create() and func_destroy() are called
      */
     aviutl2_filter_plugin_table_flag_userdata = 16,
+
+    /**
+     * Do not display in the add menu list for objects and filter effects
+     */
+    aviutl2_filter_plugin_table_flag_hidemenu = 32,
   };
 
   /**
