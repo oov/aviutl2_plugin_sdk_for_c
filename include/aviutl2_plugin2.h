@@ -169,9 +169,24 @@ enum aviutl2_event_type {
   aviutl2_event_type_change_edit_frame = 2,   /**< Current edit frame moved */
   aviutl2_event_type_change_edit_scene = 3,   /**< Current edit scene changed (includes scene info update) */
   aviutl2_event_type_change_focus_object = 4, /**< Selected object changed */
+  aviutl2_event_type_change_edit_state = 5,   /**< Edit state changed (start/end of preview playback or file output) */
+};
+
+/**
+ * Object flag type
+ */
+enum aviutl2_object_flag_type {
+  aviutl2_object_flag_type_enable_group = 1,          /**< Whether group control targeting is enabled */
+  aviutl2_object_flag_type_enable_camera = 2,         /**< Whether camera control targeting is enabled */
+  aviutl2_object_flag_type_clipping_object = 3,       /**< Whether clipping object is enabled */
+  aviutl2_object_flag_type_clipping_upper_object = 4, /**< Whether clipping by the upper object is enabled */
 };
 
 //--------------------------------
+
+struct aviutl2_edit_info_color {
+  uint8_t r, g, b, a;
+};
 
 /**
  * Edit information
@@ -195,6 +210,7 @@ struct aviutl2_edit_info {
   int grid_bpm_beat;        /**< Grid(BPM) beat (first BPM entry) */
   float grid_bpm_offset;    /**< Grid(BPM) beat offset (first BPM entry) */
   int scene_id;             /**< Scene ID */
+  struct aviutl2_edit_info_color background; /**< Scene background color */
 };
 
 /**
@@ -906,6 +922,36 @@ struct aviutl2_edit_section {
   bool (*set_palette_info)(wchar_t const *name,
                            struct aviutl2_palette_info *info,
                            int info_size);
+
+  /**
+   * Get the state of the specified object flag
+   * @param object Handle of the object whose flag is obtained
+   * @param type Object flag type
+   * @return Whether the flag is enabled (returns false if it cannot be obtained)
+   */
+  bool (*get_object_flag)(aviutl2_object_handle object, enum aviutl2_object_flag_type type);
+
+  /**
+   * Set the state of the specified object flag (not available with call_read_section)
+   * @param object Handle of the object whose flag is set
+   * @param type Object flag type
+   * @param flag Flag state
+   */
+  void (*set_object_flag)(aviutl2_object_handle object, enum aviutl2_object_flag_type type, bool flag);
+
+  /**
+   * Get the object ID
+   * @param object Handle of the object whose ID is obtained
+   * @return Object ID (returns 0 if it cannot be obtained)
+   */
+  int64_t (*get_object_id)(aviutl2_object_handle object);
+
+  /**
+   * Get the effect ID
+   * @param effect Handle of the effect whose ID is obtained
+   * @return Effect ID (returns 0 if it cannot be obtained)
+   */
+  int64_t (*get_effect_id)(aviutl2_effect_handle effect);
 };
 
 /**
@@ -1133,6 +1179,96 @@ struct aviutl2_edit_handle {
                                      wchar_t const **item_names,
                                      int item_num,
                                      int *item_index);
+
+  /**
+   * Enumerate scene names via callback function (func_proc_enum_scene)
+   * Acquires read lock for exclusive control of scene information.
+   * If already locked in the same thread, retrieves without additional locking.
+   * @param param Pointer to arbitrary user data
+   * @param func_proc_enum_scene Callback function for scene name enumeration
+   */
+  void (*enum_scene_name)(void *param,
+                          void (*func_proc_enum_scene)(void *param, wchar_t const *name, int scene_id));
+
+  /**
+   * Switch to the specified scene
+   * Cannot be used while read-locked or edit-locked
+   * @param scene_id Scene ID
+   * @return true on success (fails if the scene does not exist or during output)
+   */
+  bool (*select_scene)(int scene_id);
+
+  /**
+   * Create a scene (switches to the created scene)
+   * Cannot be used while read-locked or edit-locked
+   * @param name Scene name
+   * @param label Scene label (specifying NULL or an empty string means no label)
+   * @param width,height Scene resolution
+   * @param rate,scale Scene frame rate
+   * @param sample_rate Scene sampling rate
+   * @param background Scene background color (transparent if background.a is not 255)
+   * @return true on success (fails during output)
+   */
+  bool (*create_scene)(wchar_t const *name,
+                       wchar_t const *label,
+                       int width,
+                       int height,
+                       int rate,
+                       int scale,
+                       int sample_rate,
+                       struct aviutl2_edit_info_color background);
+
+  /**
+   * Create a new project
+   * Cannot be used while read-locked or edit-locked
+   * @param width,height Scene resolution
+   * @param rate,scale Scene frame rate
+   * @param sample_rate Scene sampling rate
+   * @param background Scene background color (transparent if background.a is not 255)
+   * @param show_confirm Show a confirmation dialog for saving or canceling the current project
+   * @return true on success (fails during output)
+   */
+  bool (*create_project)(int width,
+                         int height,
+                         int rate,
+                         int scale,
+                         int sample_rate,
+                         struct aviutl2_edit_info_color background,
+                         bool show_confirm);
+
+  /**
+   * Open the specified project file
+   * Cannot be used while read-locked or edit-locked
+   * @param file Project file path
+   * @param show_confirm Show a confirmation dialog for saving or canceling the current project
+   * @return true on success (fails during output)
+   */
+  bool (*open_project_file)(wchar_t const *file, bool show_confirm);
+
+  /**
+   * Save to the specified project file (saves using the same process as automatic backup)
+   * Cannot be used while read-locked or edit-locked
+   * @param file Project file path
+   * @return true on success (fails during output)
+   */
+  bool (*save_project_file)(wchar_t const *file);
+
+  /**
+   * Output the current scene to a file using an output plugin
+   * This function only starts file output and returns immediately
+   * Cannot be used while read-locked or edit-locked
+   * @param file Output file path
+   * @param output_plugin Output plugin name
+   * @param param Pointer to arbitrary user data
+   * @param func_project_config Callback to apply project file output settings when output starts
+   *                            Not called when NULL. If the output plugin has FLAG_PROJECT_CONFIG enabled,
+   *                            settings can be applied by setting them in the same way as func_save_project_config()
+   * @return true on success (fails during output)
+   */
+  bool (*output_file)(wchar_t const *file,
+                      wchar_t const *output_plugin,
+                      void *param,
+                      void (*func_project_config)(void *param, struct aviutl2_project_file *project));
 };
 
 /**
