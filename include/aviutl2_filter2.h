@@ -52,6 +52,14 @@ typedef void *aviutl2_object_handle;
 #endif
 
 /**
+ * Effect handle
+ */
+#ifndef AVIUTL2_EFFECT_HANDLE_DEFINED
+#define AVIUTL2_EFFECT_HANDLE_DEFINED
+typedef void *aviutl2_effect_handle;
+#endif
+
+/**
  * Track bar filter item
  */
 struct aviutl2_filter_item_track {
@@ -629,6 +637,11 @@ struct aviutl2_scene_info {
    * Scene sampling rate
    */
   int sample_rate;
+
+  /**
+   * Scene ID
+   */
+  int id;
 };
 
 /**
@@ -734,6 +747,16 @@ struct aviutl2_object_info {
    * Rendering origin frame in global (scene) coordinates (integer starting at 0)
    */
   int origin_frame;
+
+  /**
+   * Object handle
+   */
+  aviutl2_object_handle handle;
+
+  /**
+   * Effect handle
+   */
+  aviutl2_effect_handle effect_handle;
 };
 
 enum {
@@ -1280,12 +1303,14 @@ struct aviutl2_filter_proc_video {
   /**
    * Execute the specified effect
    * Filter effects and input item (such as Figure) effects can be executed
+   * Specifying NULL for name, param_list, and resource executes filter effects from the current effect onward
    * @param name Effect name to execute (effect.name value in alias file)
    * @param param_list Pointer to the setting parameter list (no settings if NULL)
    * @param param_num Number of setting parameters
    * @param resource Image resource to process with the effect. A new resource is created when the effect is an input item
    *                 "object" = current object (NULL also selects current object)
    *                 "resource:xxxx" = standard resource (xxxx is an arbitrary name)
+   *                 Even when targeting a standard resource, the current object's image parameters are referenced and updated
    * @return false on failure (for example, if the effect name or image resource name is invalid)
    */
   bool (*exec_effect)(wchar_t const *name,
