@@ -612,12 +612,15 @@ enum aviutl2_billboard_mode {
 /**
  * RGBA 32-bit structure
  */
+#ifndef AVIUTL2_PIXEL_RGBA_DEFINED
+#define AVIUTL2_PIXEL_RGBA_DEFINED
 struct aviutl2_pixel_rgba {
   uint8_t r;
   uint8_t g;
   uint8_t b;
   uint8_t a;
 };
+#endif
 
 /**
  * Scene information
@@ -642,6 +645,11 @@ struct aviutl2_scene_info {
    * Scene ID
    */
   int id;
+
+  /**
+   * ID of the scene from which rendering originated
+   */
+  int origin_id;
 };
 
 /**
@@ -749,12 +757,12 @@ struct aviutl2_object_info {
   int origin_frame;
 
   /**
-   * Object handle
+   * Handle of this object
    */
   aviutl2_object_handle handle;
 
   /**
-   * Effect handle
+   * Handle of this effect
    */
   aviutl2_effect_handle effect_handle;
 };

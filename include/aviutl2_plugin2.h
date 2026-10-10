@@ -45,7 +45,18 @@ struct aviutl2_filter_plugin_table;
 struct aviutl2_script_module_table;
 struct aviutl2_edit_handle;
 struct aviutl2_project_file;
-struct aviutl2_pixel_rgba;
+#ifndef AVIUTL2_PIXEL_RGBA_DEFINED
+#define AVIUTL2_PIXEL_RGBA_DEFINED
+/**
+ * RGBA 32-bit structure, defined here because the edit section API passes it by value
+ */
+struct aviutl2_pixel_rgba {
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+  uint8_t a;
+};
+#endif
 struct IDWriteFontCollection;
 struct IDWriteFont;
 
@@ -952,6 +963,20 @@ struct aviutl2_edit_section {
    * @return Effect ID (returns 0 if it cannot be obtained)
    */
   int64_t (*get_effect_id)(aviutl2_effect_handle effect);
+
+  /**
+   * Get the layer background color
+   * @param layer Layer number
+   * @return Layer background color (transparent (0,0,0,0) if the default color is used)
+   */
+  struct aviutl2_pixel_rgba (*get_layer_color)(int layer);
+
+  /**
+   * Set the layer background color (not available with call_read_section)
+   * @param layer Layer number
+   * @param color Layer background color (the default color is used if alpha is not 255)
+   */
+  void (*set_layer_color)(int layer, struct aviutl2_pixel_rgba color);
 };
 
 /**
@@ -965,7 +990,7 @@ struct aviutl2_edit_handle {
    * Objects edited in callback function are automatically registered to Undo
    * Callback function is called from the main thread
    * @param func_proc_edit Callback function for editing
-   * @return true on success. Fails if edit is not available (during output)
+   * @return true on success. Fails if edit is not available (during output, drag editing, etc.)
    */
   bool (*call_edit_section)(void (*func_proc_edit)(struct aviutl2_edit_section *edit));
 
