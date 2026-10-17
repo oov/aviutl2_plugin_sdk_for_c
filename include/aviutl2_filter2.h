@@ -650,7 +650,33 @@ struct aviutl2_scene_info {
    * ID of the scene from which rendering originated
    */
   int origin_id;
+
+  /**
+   * Flags
+   */
+  int flag;
+
+  /**
+   * ID for each scene rendering operation (image and audio use different ID sequences)
+   */
+  int64_t rendering_id;
 };
+
+enum {
+  /**
+   * Is this a rendering operation for a reference frame in a scene transition or motion blur?
+   */
+  aviutl2_scene_info_flag_reference_frame = 1,
+};
+
+/**
+ * Check whether this is a rendering operation for a reference frame in a scene transition or motion blur
+ * @param info Scene information
+ * @return true if this is a rendering operation for a reference frame
+ */
+static inline bool aviutl2_scene_info_is_reference_frame(struct aviutl2_scene_info const *info) {
+  return info->flag & aviutl2_scene_info_flag_reference_frame;
+}
 
 /**
  * Object information

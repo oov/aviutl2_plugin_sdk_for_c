@@ -1294,6 +1294,12 @@ struct aviutl2_edit_handle {
                       wchar_t const *output_plugin,
                       void *param,
                       void (*func_project_config)(void *param, struct aviutl2_project_file *project));
+
+  /**
+   * Get the high DPI scaling ratio
+   * @return High DPI scaling ratio
+   */
+  float (*get_high_dpi_ratio)(void);
 };
 
 /**
