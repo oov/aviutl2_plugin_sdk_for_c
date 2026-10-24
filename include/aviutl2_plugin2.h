@@ -59,6 +59,7 @@ struct aviutl2_pixel_rgba {
 #endif
 struct IDWriteFontCollection;
 struct IDWriteFont;
+struct ID3D11Device3;
 
 /**
  * Common plugin structure
@@ -981,7 +982,7 @@ struct aviutl2_edit_section {
 
 /**
  * Edit handle
- * Cannot be used from within RegisterPlugin processing except for get_host_app_window()
+ * Cannot be used from within RegisterPlugin processing except for get_host_app_window() and get_direct3d_device()
  */
 struct aviutl2_edit_handle {
   /**
@@ -1300,6 +1301,11 @@ struct aviutl2_edit_handle {
    * @return High DPI scaling ratio
    */
   float (*get_high_dpi_ratio)(void);
+
+  /**
+   * Get the Direct3D device used by the host application
+   */
+  struct ID3D11Device3 *(*get_direct3d_device)(void);
 };
 
 /**
@@ -1363,6 +1369,7 @@ enum {
  * Project file
  * Used in callbacks for loading and saving project files, and in edit callback functions
  * Project save data is part of plugin data
+ * Functions that specify a table are implemented by replacing the key name with "table[key]" and processing it
  */
 struct aviutl2_project_file {
   /**
@@ -1408,6 +1415,54 @@ struct aviutl2_project_file {
    *         Valid until callback processing ends
    */
   wchar_t const *(*get_project_file_path)(void);
+
+  /**
+   * Delete data saved in project
+   * @param key Key name (UTF-8)
+   */
+  void (*clear_param)(char const *key);
+
+  /**
+   * Get string (UTF-8) from a table saved in project
+   * @param table Table name (UTF-8)
+   * @param key Key name (UTF-8)
+   * @return Pointer to obtained string (NULL if not set)
+   *         Valid until callback processing ends
+   */
+  char const *(*get_param_table_string)(char const *table, char const *key);
+
+  /**
+   * Save string (UTF-8) to a table in project
+   * @param table Table name (UTF-8)
+   * @param key Key name (UTF-8)
+   * @param value String to save (UTF-8)
+   */
+  void (*set_param_table_string)(char const *table, char const *key, char const *value);
+
+  /**
+   * Get binary data from a table saved in project
+   * @param table Table name (UTF-8)
+   * @param key Key name (UTF-8)
+   * @param data Pointer to storage for obtained data
+   * @param size Size of data to obtain (fails if different from saved size)
+   * @return true if data obtained correctly
+   */
+  bool (*get_param_table_binary)(char const *table, char const *key, void *data, int size);
+
+  /**
+   * Save binary data to a table in project
+   * @param table Table name (UTF-8)
+   * @param key Key name (UTF-8)
+   * @param data Pointer to data to save
+   * @param size Size of data to save (4096 bytes or less)
+   */
+  void (*set_param_table_binary)(char const *table, char const *key, void *data, int size);
+
+  /**
+   * Delete a table saved in project
+   * @param table Table name (UTF-8)
+   */
+  void (*clear_param_table)(char const *table);
 };
 
 //--------------------------------

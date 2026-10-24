@@ -1453,6 +1453,20 @@ struct aviutl2_filter_proc_audio {
    * Pointer to user data returned by func_create()
    */
   void *userdata;
+
+  /**
+   * Get data from the current audio buffer
+   * @param buffer Pointer to storage for audio data (audio data is PCM float 32-bit)
+   * @param channel Audio channel number (0 = left channel, 1 = right channel)
+   */
+  void (*get_audiobuffer_data)(float *buffer, int channel);
+
+  /**
+   * Set data in the current audio buffer
+   * @param buffer Pointer to audio data (audio data is PCM float 32-bit)
+   * @param channel Audio channel number (0 = left channel, 1 = right channel)
+   */
+  void (*set_audiobuffer_data)(float const *buffer, int channel);
 };
 
 //--------------------------------
