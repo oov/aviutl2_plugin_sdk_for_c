@@ -458,7 +458,7 @@ struct aviutl2_filter_item_hide_rule {
   wchar_t const *type;
 
   /**
-   * Setting name to hide (only items with a setting value)
+   * Setting name to hide (items with setting values, settings groups, and separators)
    */
   wchar_t const *name;
 
@@ -554,6 +554,15 @@ enum aviutl2_blend_state_mode {
   aviutl2_blend_state_mode_mask = 1, /**< Multiply alpha channel only (RGB values are not used) */
   aviutl2_blend_state_mode_draw = 2, /**< Alpha blend output */
   aviutl2_blend_state_mode_add = 3,  /**< Additive blend output */
+};
+
+/**
+ * Camera control state type
+ */
+enum aviutl2_camera_mode {
+  aviutl2_camera_mode_off = 0,      /**< Not subject to camera control */
+  aviutl2_camera_mode_on = 1,       /**< Subject to camera control */
+  aviutl2_camera_mode_edit_view = 2, /**< Subject to camera control (editing view) */
 };
 
 /**
@@ -798,6 +807,16 @@ enum {
    * Is filter object
    */
   aviutl2_object_info_flag_filter_object = 1,
+
+  /**
+   * Is a target of group control
+   */
+  aviutl2_object_info_flag_group_target = 2,
+
+  /**
+   * Is a target of camera control (video filters only)
+   */
+  aviutl2_object_info_flag_camera_target = 4,
 };
 
 /**
@@ -807,6 +826,24 @@ enum {
  */
 static inline bool aviutl2_object_info_is_filter_object(struct aviutl2_object_info const *info) {
   return info->flag & aviutl2_object_info_flag_filter_object;
+}
+
+/**
+ * Check if object is a target of group control
+ * @param info Object information
+ * @return true if object is a target of group control
+ */
+static inline bool aviutl2_object_info_is_group_target(struct aviutl2_object_info const *info) {
+  return info->flag & aviutl2_object_info_flag_group_target;
+}
+
+/**
+ * Check if object is a target of camera control
+ * @param info Object information
+ * @return true if object is a target of camera control
+ */
+static inline bool aviutl2_object_info_is_camera_target(struct aviutl2_object_info const *info) {
+  return info->flag & aviutl2_object_info_flag_camera_target;
 }
 
 /**
@@ -1375,6 +1412,18 @@ struct aviutl2_filter_proc_video {
    * @return false if the object is not affected by group controls
    */
   bool (*get_group_matrix)(struct aviutl2_xmmatrix *matrix);
+
+  /**
+   * Get the camera control state of the current object
+   * @return Camera control state
+   */
+  enum aviutl2_camera_mode (*get_camera_mode)(void);
+
+  /**
+   * Get the camera control object affecting the current object
+   * @return Handle of the obtained camera control object (NULL if not subject to camera control)
+   */
+  aviutl2_object_handle (*get_camera_control_object)(void);
 };
 
 /**
