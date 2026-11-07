@@ -60,6 +60,11 @@ typedef void *aviutl2_effect_handle;
 #endif
 
 /**
+ * Setting names must be unique within each filter (only for items whose values are saved).
+ * Specifying a setting name like 'yyy::xxx' displays only the part after the last '::' ('xxx') in the settings screen.
+ */
+
+/**
  * Track bar filter item
  */
 struct aviutl2_filter_item_track {
@@ -469,6 +474,8 @@ struct aviutl2_filter_item_hide_rule {
    * File and folder selection items return whether they are selected (0/1)
    * Specify NULL to always hide
    * Specify "filter" to return whether it is a filter object (0/1)
+   * Specify "input" to return the object input item type (0=not applicable/1=video/2=audio/3=video and audio)
+   * Specify "output" to return the object output item type (0=not applicable/1=video/2=audio/3=video and audio)
    */
   wchar_t const *condition_name;
 

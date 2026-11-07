@@ -182,6 +182,7 @@ enum aviutl2_event_type {
   aviutl2_event_type_change_edit_scene = 3,   /**< Current edit scene changed (includes scene info update) */
   aviutl2_event_type_change_focus_object = 4, /**< Selected object changed */
   aviutl2_event_type_change_edit_state = 5,   /**< Edit state changed (start/end of preview playback or file output) */
+  aviutl2_event_type_reload_language = 6,      /**< Language settings reloaded */
 };
 
 /**
