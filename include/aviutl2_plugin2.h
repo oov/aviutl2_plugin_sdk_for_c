@@ -979,6 +979,24 @@ struct aviutl2_edit_section {
    * @param color Layer background color (the default color is used if alpha is not 255)
    */
   void (*set_layer_color)(int layer, struct aviutl2_pixel_rgba color);
+
+  /**
+   * Get the effect handle
+   * @param object Handle of the object whose effect handle is to be obtained
+   * @param index Index of the effect held by the object
+   * @return Effect handle (returns NULL if it cannot be obtained)
+   *         The effect handle is valid until the effect is destroyed or callback processing ends
+   */
+  aviutl2_effect_handle (*get_effect_handle)(aviutl2_object_handle object, int index);
+
+  /**
+   * Get the effect type and flags
+   * @param effect Effect handle whose type and flags are to be obtained
+   * @param type Pointer to storage for the effect type (aviutl2_effect_type_*)
+   * @param flag Pointer to storage for the effect flags (aviutl2_effect_flag_*)
+   * @return true if obtained
+   */
+  bool (*get_effect_type_flag)(aviutl2_effect_handle effect, int *type, int *flag);
 };
 
 /**
