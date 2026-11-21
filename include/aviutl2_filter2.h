@@ -60,6 +60,29 @@ typedef void *aviutl2_effect_handle;
 #endif
 
 /**
+ * RGBA 32-bit structure
+ */
+#ifndef AVIUTL2_PIXEL_RGBA_DEFINED
+#define AVIUTL2_PIXEL_RGBA_DEFINED
+struct aviutl2_pixel_rgba {
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+  uint8_t a;
+};
+#endif
+
+static inline struct aviutl2_pixel_rgba aviutl2_pixel_rgba_from_code(int code) {
+  struct aviutl2_pixel_rgba color = {
+    (uint8_t)((code >> 16) & 0xff),
+    (uint8_t)((code >> 8) & 0xff),
+    (uint8_t)(code & 0xff),
+    255,
+  };
+  return color;
+}
+
+/**
  * Setting names must be unique within each filter (only for items whose values are saved).
  * Specifying a setting name like 'yyy::xxx' displays only the part after the last '::' ('xxx') in the settings screen.
  */
@@ -219,6 +242,64 @@ struct aviutl2_filter_item_color {
     };
   } value;
 };
+
+/**
+ * Color list filter item
+ * The maximum number of colors is specified by the capacity argument.
+ * Setting names after the first can be specified separated by "|". If fewer names than the maximum are specified, the last name is used.
+ * Default color values are specified as a variable number of arguments.
+ * In C, declare this item with AVIUTL2_FILTER_ITEM_COLOR_LIST(N), where N is the maximum number of colors.
+ * Example:
+ *   AVIUTL2_FILTER_ITEM_COLOR_LIST(8) colorlist = {
+ *     L"colorlist", L"Base color|Intermediate color", 0, 8, 1,
+ *     { { { 255, 255, 255, 255 }, 0, 0 } }
+ *   };
+ */
+struct aviutl2_filter_item_color_list_value {
+  /** Setting color value */
+  struct aviutl2_pixel_rgba color;
+
+  /** Color position (0 to 10000) */
+  unsigned int position : 31;
+
+  /** Whether the color is unspecified */
+  unsigned int is_undefined : 1;
+};
+
+static inline struct aviutl2_filter_item_color_list_value
+aviutl2_filter_item_color_list_value_default(void) {
+  struct aviutl2_filter_item_color_list_value value = { { 0, 0, 0, 255 }, 0, 0 };
+  return value;
+}
+
+static inline struct aviutl2_filter_item_color_list_value
+aviutl2_filter_item_color_list_value_from_color(struct aviutl2_pixel_rgba color) {
+  struct aviutl2_filter_item_color_list_value value = { color, 0, 0 };
+  return value;
+}
+
+/** Get position as a value from 0.0 to 100.0 */
+static inline float aviutl2_filter_item_color_list_value_get_position(
+    struct aviutl2_filter_item_color_list_value const *value) {
+  return value->position / 100.0f;
+}
+
+enum aviutl2_filter_item_color_list_flag {
+  aviutl2_filter_item_color_list_flag_use_undefined = 1, /**< Whether to use unspecified */
+  aviutl2_filter_item_color_list_flag_use_position = 2, /**< Whether to use color positions */
+  aviutl2_filter_item_color_list_flag_fixed_color_num = 4, /**< Whether to fix the number of colors */
+  aviutl2_filter_item_color_list_flag_use_alpha_channel = 8, /**< Whether to use alpha values */
+};
+
+#define AVIUTL2_FILTER_ITEM_COLOR_LIST(N) \
+  struct { \
+    wchar_t const *type; /* Setting type (L"colorlist") */ \
+    wchar_t const *name; /* Setting name */ \
+    int const flag; /* Setting flags (aviutl2_filter_item_color_list_flag) */ \
+    int const max_num; /* Maximum number of colors */ \
+    int num; /* Number of colors; updated when filter function is called */ \
+    struct aviutl2_filter_item_color_list_value value[N]; /* Color values; updated when filter function is called */ \
+  }
 
 /**
  * Select list filter item
@@ -626,19 +707,6 @@ enum aviutl2_billboard_mode {
 //--------------------------------
 
 /**
- * RGBA 32-bit structure
- */
-#ifndef AVIUTL2_PIXEL_RGBA_DEFINED
-#define AVIUTL2_PIXEL_RGBA_DEFINED
-struct aviutl2_pixel_rgba {
-  uint8_t r;
-  uint8_t g;
-  uint8_t b;
-  uint8_t a;
-};
-#endif
-
-/**
  * Scene information
  */
 struct aviutl2_scene_info {
@@ -877,6 +945,80 @@ struct aviutl2_object_audio_param {
 struct aviutl2_effect_item_param {
   wchar_t const *name; /**< Setting name (setting key name in alias file) */
   char const *value;   /**< Setting value (UTF-8), same format as setting value in alias file */
+};
+
+//--------------------------------
+
+/**
+ * Anchor processing section structure
+ * Can be used in the callback function for dragging an anchor point.
+ * Generic data items can be updated in the callback function.
+ * Note: Changes to track bar items are planned for the future.
+ */
+struct aviutl2_anchor_section {
+  /** Index of the anchor specified in an aviutl2_anchor_handle function */
+  int index;
+
+  /** Coordinates of the anchor's destination when dragged */
+  float x, y, z;
+
+  /** Amount the anchor moved in the current drag operation */
+  float dx, dy, dz;
+
+  /** Coordinates where dragging the anchor began */
+  float origin_x, origin_y, origin_z;
+
+  /** Pointer to parameter data specified in an aviutl2_anchor_handle function */
+  void *param;
+
+  /** User data pointer (set when FLAG_USERDATA is enabled), returned by func_create() */
+  void *userdata;
+
+  /** Edit section interface; read-only functions are available during anchor processing */
+  struct aviutl2_edit_section *edit;
+
+  /** Handle of the object itself */
+  aviutl2_object_handle object;
+
+  /** Handle of this object's effect */
+  aviutl2_effect_handle effect;
+};
+
+/**
+ * Anchor operation handle structure
+ */
+struct aviutl2_anchor_handle {
+  /**
+   * Set a draggable anchor point.
+   * @param index Arbitrary anchor index, set in aviutl2_anchor_section
+   * @param x,y,z Anchor coordinates in object coordinate space
+   * @param flag Anchor flags (currently specify 0)
+   * @param param Pointer to arbitrary parameter data, set in aviutl2_anchor_section
+   * @param func_proc_anchor Callback for dragging the anchor
+   */
+  void (*set_anchor_move_point)(int index,
+                                float x,
+                                float y,
+                                float z,
+                                int flag,
+                                void *param,
+                                void (*func_proc_anchor)(struct aviutl2_anchor_section *anchor));
+
+  /**
+   * Set an anchor line.
+   * @param x0,y0,z0 Start coordinates of the anchor line
+   * @param x1,y1,z1 End coordinates of the anchor line
+   * @param flag Anchor flags (currently specify 0)
+   * @param color Anchor line color
+   */
+  void (*set_anchor_line)(float x0,
+                          float y0,
+                          float z0,
+                          float x1,
+                          float y1,
+                          float z1,
+                          int flag,
+                          struct aviutl2_pixel_rgba color);
 };
 
 //--------------------------------
@@ -1431,6 +1573,12 @@ struct aviutl2_filter_proc_video {
    * @return Handle of the obtained camera control object (NULL if not subject to camera control)
    */
   aviutl2_object_handle (*get_camera_control_object)(void);
+
+  /**
+   * Anchor operation handle
+   * Set to NULL if anchors cannot be set
+   */
+  struct aviutl2_anchor_handle *anchor;
 };
 
 /**

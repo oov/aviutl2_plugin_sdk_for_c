@@ -1380,6 +1380,7 @@ enum {
   aviutl2_effect_item_type_number_group = 17, /**< Number (track bar) group */
   aviutl2_effect_item_type_group = 18,        /**< Setting group (explicit groups only); no setting value */
   aviutl2_effect_item_type_separator = 19,   /**< Separator; no setting value */
+  aviutl2_effect_item_type_color_list = 20,  /**< Color list */
 };
 
 //--------------------------------
